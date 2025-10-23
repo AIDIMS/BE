@@ -1,0 +1,27 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-push checks..."
+
+# Run dotnet build
+echo "Building solution..."
+dotnet build --no-incremental
+
+if [ $? -ne 0 ]; then
+    echo "Build failed. Push aborted."
+    exit 1
+fi
+
+# Run tests if they exist
+if [ -d "tests" ] || [ -d "Tests" ]; then
+    echo "Running tests..."
+    dotnet test --no-build
+
+    if [ $? -ne 0 ]; then
+        echo "Tests failed. Push aborted."
+        exit 1
+    fi
+fi
+
+echo "Pre-push checks complete!"
+exit 0
