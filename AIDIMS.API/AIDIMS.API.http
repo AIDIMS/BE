@@ -1,0 +1,6 @@
+@AIDIMS.API_HostAddress = http://localhost:5104
+
+GET {{AIDIMS.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
