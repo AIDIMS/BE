@@ -1,0 +1,61 @@
+{
+  "Name": "AIDIMS Orthanc Server",
+  "StorageDirectory": "/var/lib/orthanc/db",
+  "IndexDirectory": "/var/lib/orthanc/db",
+  "RemoteAccessAllowed": true,
+  "AuthenticationEnabled": true,
+  "RegisteredUsers": {
+    "admin": "admin"
+  },
+  "PostgreSQL": {
+    "EnableIndex": true,
+    "EnableStorage": false,
+    "Host": "postgres",
+    "Port": 5432,
+    "Database": "orthanc",
+    "Username": "orthanc",
+    "Password": "123qwe",
+    "Lock": true,
+    "MaximumConnectionRetries": 10,
+    "ConnectionRetryInterval": 5
+  },
+  "DicomServerEnabled": true,
+  "DicomAet": "AIDIMS_ORTHANC",
+  "DicomCheckCalledAet": false,
+  "DicomPort": 4242,
+  "DefaultEncoding": "Latin1",
+  "DicomScuTimeout": 10,
+  "DicomScpTimeout": 30,
+  "HttpPort": 8042,
+  "HttpDescribeErrors": true,
+  "HttpCompressionEnabled": true,
+  "HttpRequestTimeout": 30,
+  "CorsEnabled": true,
+  "CorsAllowedOrigins": "*",
+  "CorsAllowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  "CorsAllowedHeaders": ["*"],
+  "CorsAllowCredentials": true,
+  "MaximumStorageSize": 0,
+  "MaximumPatientCount": 0,
+  "OverwriteInstances": false,
+  "StorageCompression": false,
+  "JobsHistorySize": 10,
+  "SaveJobs": true,
+  "MediaArchiveSize": 1,
+  "HttpThreadsCount": 50,
+  "LogLevel": "default",
+  "LogFile": "",
+  "StableAge": 60,
+  "StrictAetComparison": false,
+  "DicomAssociationCloseDelay": 5,
+  "DicomTlsEnabled": false,
+  "DicomModalities": {},
+  "OrthancPeers": {},
+  "Plugins": [
+    "/usr/share/orthanc/plugins"
+  ],
+  "LuaScripts": [],
+  "HttpHeaders": {
+    "Server": "AIDIMS Orthanc"
+  }
+}

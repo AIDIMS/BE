@@ -1,0 +1,83 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: orthanc-postgres
+    environment:
+      POSTGRES_DB: orthanc
+      POSTGRES_USER: orthanc
+      POSTGRES_PASSWORD: 123qwe
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - orthanc-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orthanc"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Orthanc DICOM Server with OSIMIS Web Viewer and Explorer 2
+  orthanc:
+    image: orthancteam/orthanc:latest
+    container_name: orthanc-server
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "4242:4242"  # DICOM port
+      - "8042:8042"  # HTTP port for Web UI and REST API
+    environment:
+      - ORTHANC__NAME=AIDIMS Orthanc
+      - ORTHANC__REMOTE_ACCESS_ALLOWED=true
+      - ORTHANC__AUTHENTICATION_ENABLED=true
+      - ORTHANC__REGISTERED_USERS={"admin":"admin"}
+      # PostgreSQL Plugin Configuration
+      - ORTHANC__POSTGRESQL__ENABLE_INDEX=true
+      - ORTHANC__POSTGRESQL__ENABLE_STORAGE=false
+      - ORTHANC__POSTGRESQL__HOST=postgres
+      - ORTHANC__POSTGRESQL__PORT=5432
+      - ORTHANC__POSTGRESQL__DATABASE=orthanc
+      - ORTHANC__POSTGRESQL__USERNAME=orthanc
+      - ORTHANC__POSTGRESQL__PASSWORD=123qwe
+      - ORTHANC__POSTGRESQL__LOCK=true
+      # General Settings
+      - ORTHANC__HTTP_COMPRESSION_ENABLED=true
+      - ORTHANC__HTTP_TIMEOUT=30
+      - ORTHANC__MAXIMUM_STORAGE_SIZE=0
+      - ORTHANC__MAXIMUM_PATIENT_COUNT=0
+      # DICOM Settings
+      - ORTHANC__DICOM_AET=AIDIMS_ORTHANC
+      - ORTHANC__DICOM_CHECK_CALLED_AET=false
+      - ORTHANC__DICOM_PORT=4242
+      # CORS Settings
+      - ORTHANC__HTTP_CORS_ENABLED=true
+      - ORTHANC__HTTP_CORS_ALLOWED_ORIGINS=*
+      - ORTHANC__HTTP_CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
+      - ORTHANC__HTTP_CORS_ALLOWED_HEADERS=*
+      # Stone Web Viewer Plugin Settings
+      - STONE_WEB_VIEWER_PLUGIN_ENABLED=true
+      - DICOM_WEB_PLUGIN_ENABLED=true
+    volumes:
+      - orthanc_data:/var/lib/orthanc/db
+      - ./orthanc.json:/etc/orthanc/orthanc.json:ro
+    networks:
+      - orthanc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8042/system || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  orthanc-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  orthanc_data:
+    driver: local
