@@ -19,6 +19,27 @@ services:
       timeout: 5s
       retries: 5
 
+  # === DATABASE WEB APP ===
+  postgres-web:
+    image: postgres:16-alpine
+    container_name: web-postgres
+    environment:
+      POSTGRES_DB: AIDIMS_DB_Dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123qwe
+    volumes:
+      - postgres_web_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - orthanc-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U web_user -d web_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # Orthanc DICOM Server with OSIMIS Web Viewer and Explorer 2
   orthanc:
     image: orthancteam/orthanc:latest
@@ -62,7 +83,7 @@ services:
       - DICOM_WEB_PLUGIN_ENABLED=true
     volumes:
       - orthanc_data:/var/lib/orthanc/db
-      - ./orthanc.json:/etc/orthanc/orthanc.json:ro
+      - ./Orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
     networks:
       - orthanc-network
     restart: unless-stopped
@@ -78,6 +99,8 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  postgres_web_data:
     driver: local
   orthanc_data:
     driver: local
