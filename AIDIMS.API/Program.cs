@@ -1,11 +1,16 @@
 using AIDIMS.Application;
 using AIDIMS.Infrastructure;
 using AIDIMS.API.Middleware;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // Add Application layer
 builder.Services.AddApplication();

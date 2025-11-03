@@ -24,9 +24,9 @@ public class UserMappingProfile : Profile
             .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
-            .ForMember(dest => dest.LastLoginAt, opt => opt.Ignore())
-            .ForMember(dest => dest.PasswordHash, opt => opt.MapFrom(src => src.Password))
-            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
+            // .ForMember(dest => dest.LastLoginAt, opt => opt.Ignore())
+            .ForMember(dest => dest.PasswordHash, opt => opt.MapFrom(src => src.Password));
+            // .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
 
         CreateMap<UpdateUserDto, User>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -38,7 +38,7 @@ public class UserMappingProfile : Profile
             .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
             .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
             .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
-            .ForMember(dest => dest.LastLoginAt, opt => opt.Ignore());
+            .ForMember(dest => dest.DeletedBy, opt => opt.Ignore());
+            // .ForMember(dest => dest.LastLoginAt, opt => opt.Ignore());
     }
 }

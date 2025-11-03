@@ -15,28 +15,56 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(u => u.Id);
 
-        builder.Property(u => u.Email)
+        builder.Property(u => u.Username)
             .IsRequired()
-            .HasMaxLength(256);
-
-        builder.Property(u => u.FirstName)
-            .IsRequired()
-            .HasMaxLength(100);
-
-        builder.Property(u => u.LastName)
-            .IsRequired()
-            .HasMaxLength(100);
-
-        builder.Property(u => u.PhoneNumber)
-            .HasMaxLength(20);
+            .HasMaxLength(50);
 
         builder.Property(u => u.PasswordHash)
             .IsRequired()
-            .HasMaxLength(500);
+            .HasMaxLength(255);
+
+        builder.Property(u => u.FirstName)
+            .HasMaxLength(50);
+
+        builder.Property(u => u.LastName)
+            .HasMaxLength(50);
+
+        builder.Property(u => u.Role)
+            .IsRequired();
+
+        builder.Property(u => u.Email)
+            .HasMaxLength(100);
+
+        builder.Property(u => u.PhoneNumber)
+            .HasMaxLength(15);
 
         // Indexes
         builder.HasIndex(u => u.Email)
             .IsUnique();
+
+        builder.HasIndex(u => u.Username)
+            .IsUnique();
+
+        // Relationships
+        builder.HasMany(u => u.AssignedVisits)
+            .WithOne(v => v.AssignedDoctor)
+            .HasForeignKey(v => v.AssignedDoctorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(u => u.RequestedOrders)
+            .WithOne(o => o.RequestingDoctor)
+            .HasForeignKey(o => o.RequestingDoctorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(u => u.AssignedStudies)
+            .WithOne(s => s.AssignedDoctor)
+            .HasForeignKey(s => s.AssignedDoctorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(u => u.Notifications)
+            .WithOne(n => n.User)
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Query filters for soft delete
         builder.HasQueryFilter(u => !u.IsDeleted);

@@ -14,9 +14,18 @@ public class ApplicationDbContext : DbContext
     {
     }
 
-    public DbSet<User> Users => Set<User>();
-
-    // Add other DbSets here
+    // DbSets
+    public DbSet<User> Users { get; set; }
+    public DbSet<Patient> Patients { get; set; }
+    public DbSet<PatientVisit> PatientVisits { get; set; }
+    public DbSet<ImagingOrder> ImagingOrders { get; set; }
+    public DbSet<DicomStudy> DicomStudies { get; set; }
+    public DbSet<DicomSeries> DicomSeries { get; set; }
+    public DbSet<DicomInstance> DicomInstances { get; set; }
+    public DbSet<AiResult> AiResults { get; set; }
+    public DbSet<Diagnosis> Diagnoses { get; set; }
+    public DbSet<ImageAnnotation> ImageAnnotations { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,11 +43,11 @@ public class ApplicationDbContext : DbContext
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                    entry.Entity.CreatedAt = DateTime.UtcNow.AddHours(7);
                     entry.Entity.Id = Guid.NewGuid();
                     break;
                 case EntityState.Modified:
-                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                    entry.Entity.UpdatedAt = DateTime.UtcNow.AddHours(7);
                     break;
             }
         }
