@@ -21,6 +21,7 @@ public static class DependencyInjection
 
         // Register services
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IPatientService, PatientService>();
 
         // Add other services here
 

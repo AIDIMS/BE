@@ -2,7 +2,6 @@ using AIDIMS.Application.Common;
 using AIDIMS.Application.DTOs;
 using AIDIMS.Application.Interfaces;
 using AIDIMS.Domain.Entities;
-using AIDIMS.Domain.Exceptions;
 using AIDIMS.Domain.Interfaces;
 using AutoMapper;
 
