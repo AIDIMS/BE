@@ -20,7 +20,7 @@ public class CreatePatientDtoValidator : AbstractValidator<CreatePatientDto>
             .Must(g => g == "Male" || g == "Female" || g == "Other")
             .WithMessage("Gender must be 'Male', 'Female', or 'Other'");
         RuleFor(x => x.PhoneNumber)
-            .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Invalid phone number format")
+            .Matches(@"^(?:\+84|0)\d{9}$").WithMessage("Invalid phone number format")
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
     }
 

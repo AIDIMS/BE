@@ -45,13 +45,6 @@ public class PatientService : IPatientService
         var patients = await _patientRepository.GetAllAsync(cancellationToken);
         var query = patients.AsEnumerable();
 
-        if (!string.IsNullOrWhiteSpace(filters.FullName))
-        {
-            var name = filters.FullName.Trim();
-            query = query.Where(p => !string.IsNullOrEmpty(p.FullName)
-                                     && p.FullName.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0);
-        }
-
         if (filters.DateOfBirth.HasValue)
         {
             var dob = filters.DateOfBirth.Value.Date;
@@ -71,11 +64,18 @@ public class PatientService : IPatientService
             }
         }
 
+        if (!string.IsNullOrWhiteSpace(filters.FullName))
+        {
+            var name = filters.FullName.Trim().ToLower();
+            query = query.Where(p => !string.IsNullOrEmpty(p.FullName)
+                                     && p.FullName.ToLower().Contains(name));
+        }
+
         if (!string.IsNullOrWhiteSpace(filters.PhoneNumber))
         {
             var phone = filters.PhoneNumber.Trim();
             query = query.Where(p => !string.IsNullOrEmpty(p.PhoneNumber)
-                                     && p.PhoneNumber.IndexOf(phone, StringComparison.OrdinalIgnoreCase) >= 0);
+                                     && p.PhoneNumber.Contains(phone));
         }
 
         var totalCount = query.Count();
