@@ -1,13 +1,16 @@
+using AIDIMS.API.Filters;
 using AIDIMS.Application.Common;
 using AIDIMS.Application.DTOs;
 using AIDIMS.Application.Interfaces;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AIDIMS.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -25,9 +28,10 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Get all users with pagination
+    /// Get all users with pagination (Admin only)
     /// </summary>
     [HttpGet]
+    [AdminOnly]
     public async Task<ActionResult<Result<PagedResult<UserDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
@@ -62,9 +66,10 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new user
+    /// Create a new user (Admin only)
     /// </summary>
     [HttpPost]
+    [AdminOnly]
     public async Task<ActionResult<Result<UserDto>>> Create(
         [FromBody] CreateUserDto dto,
         CancellationToken cancellationToken)
@@ -91,9 +96,10 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing user
+    /// Update an existing user (Admin only)
     /// </summary>
     [HttpPut("{id}")]
+    [AdminOnly]
     public async Task<ActionResult<Result<UserDto>>> Update(
         Guid id,
         [FromBody] UpdateUserDto dto,
@@ -118,9 +124,10 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a user
+    /// Delete a user (Admin only)
     /// </summary>
     [HttpDelete("{id}")]
+    [AdminOnly]
     public async Task<ActionResult<Result>> Delete(
         Guid id,
         CancellationToken cancellationToken)

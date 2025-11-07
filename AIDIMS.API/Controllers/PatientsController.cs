@@ -1,13 +1,16 @@
+using AIDIMS.API.Filters;
 using AIDIMS.Application.Common;
 using AIDIMS.Application.DTOs;
 using AIDIMS.Application.Interfaces;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AIDIMS.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PatientsController : ControllerBase
 {
     private readonly IPatientService _patientService;
@@ -55,7 +58,7 @@ public class PatientsController : ControllerBase
         return Ok(result);
     }
 
-/// <summary>
+    /// <summary>
     /// Get patient by ID
     /// </summary>
     [HttpGet("{id}")]
@@ -74,9 +77,10 @@ public class PatientsController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new patient
+    /// Create a new patient (Receptionist, Doctor, or Admin can create)
     /// </summary>
     [HttpPost]
+    [AdminOrDoctor]
     public async Task<ActionResult<Result<PatientDto>>> Create(
         [FromBody] CreatePatientDto dto,
         CancellationToken cancellationToken = default)
@@ -98,9 +102,10 @@ public class PatientsController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing patient
+    /// Update an existing patient (Doctor or Admin can update)
     /// </summary>
     [HttpPut("{id}")]
+    [AdminOrDoctor]
     public async Task<ActionResult<Result<PatientDto>>> Update(
         Guid id,
         [FromBody] UpdatePatientDto dto,
@@ -124,9 +129,10 @@ public class PatientsController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a patient by ID
+    /// Delete a patient by ID (Admin only)
     /// </summary>
     [HttpDelete("{id}")]
+    [AdminOnly]
     public async Task<ActionResult<Result>> Delete(
         Guid id,
         CancellationToken cancellationToken = default)

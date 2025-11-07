@@ -1,6 +1,8 @@
+using AIDIMS.Application.Interfaces;
 using AIDIMS.Domain.Interfaces;
 using AIDIMS.Infrastructure.Data;
 using AIDIMS.Infrastructure.Repositories;
+using AIDIMS.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +29,10 @@ public static class DependencyInjection
 
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Register authentication services
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         // Add other infrastructure services here
 

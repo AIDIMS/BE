@@ -26,6 +26,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Diagnosis> Diagnoses { get; set; }
     public DbSet<ImageAnnotation> ImageAnnotations { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -22,4 +22,5 @@ public class User : BaseAuditableEntity
     public ICollection<ImagingOrder> RequestedOrders { get; set; } = new List<ImagingOrder>();
     public ICollection<DicomStudy> AssignedStudies { get; set; } = new List<DicomStudy>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }
