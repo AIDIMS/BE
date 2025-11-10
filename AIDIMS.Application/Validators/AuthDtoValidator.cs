@@ -44,9 +44,8 @@ public class RegisterDtoValidator : AbstractValidator<RegisterDto>
             .MaximumLength(100).WithMessage("Last name must not exceed 100 characters");
 
         RuleFor(x => x.PhoneNumber)
-            .Matches(@"^\+?[1-9]\d{1,14}$")
-            .When(x => !string.IsNullOrEmpty(x.PhoneNumber))
-            .WithMessage("Invalid phone number format");
+            .Matches(@"^(?:\+84|0)\d{9}$").WithMessage("Invalid phone number format")
+            .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
 
         RuleFor(x => x.Role)
             .IsInEnum().WithMessage("Invalid user role");

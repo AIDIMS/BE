@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using AIDIMS.Application;
 using AIDIMS.Infrastructure;
 using AIDIMS.API.Middleware;
@@ -30,6 +31,22 @@ builder.Services.AddHealthChecks()
         timeout: TimeSpan.FromSeconds(5)
     );
 
+var orthancConfig = builder.Configuration.GetSection("Orthanc");
+var orthancBaseUrl = orthancConfig["BaseUrl"];
+var orthancUser = orthancConfig["Username"];
+var orthancPass = orthancConfig["Password"];
+
+var basicAuthToken = Convert.ToBase64String(
+    Encoding.UTF8.GetBytes($"{orthancUser}:{orthancPass}")
+);
+
+builder.Services.AddHttpClient("OrthancClient", client =>
+{
+    client.BaseAddress = new Uri(orthancBaseUrl);
+
+    client.DefaultRequestHeaders.Authorization =
+        new AuthenticationHeaderValue("Basic", basicAuthToken);
+});
 
 // Add Application layer
 builder.Services.AddApplication();

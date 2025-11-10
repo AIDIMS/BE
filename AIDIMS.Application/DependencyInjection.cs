@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IDicomService, DicomService>();
 
         // Add other services here
 
