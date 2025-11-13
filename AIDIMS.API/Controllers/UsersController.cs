@@ -16,15 +16,18 @@ public class UsersController : ControllerBase
     private readonly IUserService _userService;
     private readonly IValidator<CreateUserDto> _createUserValidator;
     private readonly IValidator<UpdateUserDto> _updateUserValidator;
+    private readonly IValidator<UpdateUserByIdentifyDto> _updateUserByIdentifyValidator;
 
     public UsersController(
         IUserService userService,
         IValidator<CreateUserDto> createUserValidator,
-        IValidator<UpdateUserDto> updateUserValidator)
+        IValidator<UpdateUserDto> updateUserValidator,
+        IValidator<UpdateUserByIdentifyDto> updateUserByIdentifyValidator)
     {
         _userService = userService;
         _createUserValidator = createUserValidator;
         _updateUserValidator = updateUserValidator;
+        _updateUserByIdentifyValidator = updateUserByIdentifyValidator;
     }
 
     [HttpGet]
@@ -102,6 +105,30 @@ public class UsersController : ControllerBase
         }
 
         var result = await _userService.UpdateAsync(id, dto, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPut("identify/{id}")]
+    public async Task<ActionResult<Result<UserDto>>> UpdateByIdentify(
+        Guid id,
+        [FromBody] UpdateUserByIdentifyDto dto,
+        CancellationToken cancellationToken)
+    {
+        // Validate input
+        var validationResult = await _updateUserByIdentifyValidator.ValidateAsync(dto, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors.Select(e => e.ErrorMessage);
+            return BadRequest(Result<UserDto>.Failure("Validation failed", errors));
+        }
+
+        var result = await _userService.UpdateByIdentifyAsync(id, dto, cancellationToken);
 
         if (!result.IsSuccess)
         {

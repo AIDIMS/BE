@@ -9,5 +9,6 @@ public interface IUserService
     Task<Result<PagedResult<UserDto>>> GetAllAsync(PaginationParams paginationParams, CancellationToken cancellationToken = default);
     Task<Result<UserDto>> CreateAsync(CreateUserDto dto, CancellationToken cancellationToken = default);
     Task<Result<UserDto>> UpdateAsync(Guid id, UpdateUserDto dto, CancellationToken cancellationToken = default);
+    Task<Result<UserDto>> UpdateByIdentifyAsync(Guid id, UpdateUserByIdentifyDto dto, CancellationToken cancellationToken = default);
     Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

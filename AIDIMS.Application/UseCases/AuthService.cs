@@ -63,8 +63,7 @@ public class AuthService : IAuthService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Token = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")),
-            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")).AddHours(7),
             IsRevoked = false
         };
 
@@ -76,74 +75,11 @@ public class AuthService : IAuthService
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")).AddHours(7),
             User = userDto
         };
 
         return Result<AuthResponseDto>.Success(response, "Login successful");
-    }
-
-    public async Task<Result<AuthResponseDto>> RegisterAsync(RegisterDto registerDto, CancellationToken cancellationToken = default)
-    {
-        // Check if username already exists
-        var users = await _userRepository.GetAllAsync(cancellationToken);
-        if (users.Any(u => u.Username == registerDto.Username))
-        {
-            return Result<AuthResponseDto>.Failure("Username already exists");
-        }
-
-        // Check if email already exists
-        if (!string.IsNullOrEmpty(registerDto.Email) && users.Any(u => u.Email == registerDto.Email))
-        {
-            return Result<AuthResponseDto>.Failure("Email already exists");
-        }
-
-        // Create new user
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Username = registerDto.Username,
-            PasswordHash = _passwordHasher.HashPassword(registerDto.Password),
-            Email = registerDto.Email,
-            FirstName = registerDto.FirstName,
-            LastName = registerDto.LastName,
-            PhoneNumber = registerDto.PhoneNumber,
-            Role = registerDto.Role,
-            Department = registerDto.Department,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _userRepository.AddAsync(user, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        // Generate tokens
-        var accessToken = _jwtService.GenerateAccessToken(user);
-        var refreshToken = _jwtService.GenerateRefreshToken();
-
-        // Save refresh token
-        var refreshTokenEntity = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            Token = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")),
-            CreatedAt = DateTime.UtcNow,
-            IsRevoked = false
-        };
-
-        await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var userDto = _mapper.Map<UserDto>(user);
-        var response = new AuthResponseDto
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")),
-            User = userDto
-        };
-
-        return Result<AuthResponseDto>.Success(response, "Registration successful");
     }
 
     public async Task<Result<AuthResponseDto>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
@@ -175,6 +111,7 @@ public class AuthService : IAuthService
 
         // Revoke old refresh token
         storedToken.IsRevoked = true;
+        storedToken.RevokedAt = DateTime.UtcNow.AddHours(7).ToString("o");
         storedToken.ReplacedByToken = newRefreshToken;
         await _refreshTokenRepository.UpdateAsync(storedToken, cancellationToken);
 
@@ -184,8 +121,7 @@ public class AuthService : IAuthService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Token = newRefreshToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")),
-            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")).AddHours(7),
             IsRevoked = false
         };
 
@@ -197,7 +133,7 @@ public class AuthService : IAuthService
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")).AddHours(7),
             User = userDto
         };
 
@@ -220,7 +156,6 @@ public class AuthService : IAuthService
 
         // Update password
         user.PasswordHash = _passwordHasher.HashPassword(changePasswordDto.NewPassword);
-        user.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

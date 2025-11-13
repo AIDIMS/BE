@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AIDIMS.Application.Common;
 using AIDIMS.Application.DTOs;
 using AIDIMS.Application.Interfaces;
@@ -12,15 +13,18 @@ public class UserService : IUserService
     private readonly IRepository<User> _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IPasswordHasher _passwordHasher;
 
     public UserService(
         IRepository<User> userRepository,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<Result<UserDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -65,10 +69,7 @@ public class UserService : IUserService
     {
         var user = _mapper.Map<User>(dto);
 
-        // TODO: Add password hashing using a proper password hasher service
-        // For now, storing as-is (this should be changed in production)
-
-        user.CreatedAt = DateTime.UtcNow;
+        user.PasswordHash = _passwordHasher.HashPassword(dto.Password);
         user.Id = Guid.NewGuid();
 
         var createdUser = await _userRepository.AddAsync(user, cancellationToken);
@@ -91,7 +92,27 @@ public class UserService : IUserService
         }
 
         _mapper.Map(dto, user);
-        user.UpdatedAt = DateTime.UtcNow;
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var userDto = _mapper.Map<UserDto>(user);
+        return Result<UserDto>.Success(userDto, "User updated successfully");
+    }
+
+    public async Task<Result<UserDto>> UpdateByIdentifyAsync(
+        Guid id,
+        UpdateUserByIdentifyDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+
+        if (user == null)
+        {
+            return Result<UserDto>.Failure($"User with ID {id} not found");
+        }
+
+        _mapper.Map(dto, user);
 
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

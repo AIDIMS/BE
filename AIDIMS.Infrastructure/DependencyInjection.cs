@@ -32,7 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         // Add other infrastructure services here
-
+        services.AddHttpContextAccessor();
         return services;
     }
 }

@@ -9,5 +9,6 @@ public enum Department
     Pediatrics,
     Emergency,
     Orthopedics,
-    GeneralMedicine
+    GeneralMedicine,
+    PACS
 }

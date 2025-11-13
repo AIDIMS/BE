@@ -14,18 +14,15 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IValidator<LoginDto> _loginValidator;
-    private readonly IValidator<RegisterDto> _registerValidator;
     private readonly IValidator<ChangePasswordDto> _changePasswordValidator;
 
     public AuthController(
         IAuthService authService,
         IValidator<LoginDto> loginValidator,
-        IValidator<RegisterDto> registerValidator,
         IValidator<ChangePasswordDto> changePasswordValidator)
     {
         _authService = authService;
         _loginValidator = loginValidator;
-        _registerValidator = registerValidator;
         _changePasswordValidator = changePasswordValidator;
     }
 
@@ -47,29 +44,6 @@ public class AuthController : ControllerBase
         if (!result.IsSuccess)
         {
             return Unauthorized(result);
-        }
-
-        return Ok(result);
-    }
-
-    [HttpPost("register")]
-    [AllowAnonymous]
-    public async Task<ActionResult<Result<AuthResponseDto>>> Register(
-        [FromBody] RegisterDto registerDto,
-        CancellationToken cancellationToken)
-    {
-        var validationResult = await _registerValidator.ValidateAsync(registerDto, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            var errors = validationResult.Errors.Select(e => e.ErrorMessage);
-            return BadRequest(Result<AuthResponseDto>.Failure("Validation failed", errors));
-        }
-
-        var result = await _authService.RegisterAsync(registerDto, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return BadRequest(result);
         }
 
         return Ok(result);

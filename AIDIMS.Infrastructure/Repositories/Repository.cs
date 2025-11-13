@@ -3,6 +3,7 @@ using AIDIMS.Domain.Interfaces;
 using AIDIMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace AIDIMS.Infrastructure.Repositories;
 
@@ -53,9 +54,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public virtual Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
     {
-        entity.IsDeleted = true;
-        entity.UpdatedAt = DateTime.UtcNow;
-        _dbSet.Update(entity);
+        _dbSet.Remove(entity);
         return Task.CompletedTask;
     }
 
