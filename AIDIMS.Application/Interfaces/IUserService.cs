@@ -3,9 +3,6 @@ using AIDIMS.Application.DTOs;
 
 namespace AIDIMS.Application.Interfaces;
 
-/// <summary>
-/// Interface for User service
-/// </summary>
 public interface IUserService
 {
     Task<Result<UserDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

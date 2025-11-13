@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AIDIMS.Infrastructure.Data;
 
-/// <summary>
-/// Application database context
-/// </summary>
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)

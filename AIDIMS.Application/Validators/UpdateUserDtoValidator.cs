@@ -3,9 +3,6 @@ using FluentValidation;
 
 namespace AIDIMS.Application.Validators;
 
-/// <summary>
-/// Validator for UpdateUserDto
-/// </summary>
 public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
 {
     public UpdateUserDtoValidator()

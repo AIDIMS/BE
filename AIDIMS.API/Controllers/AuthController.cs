@@ -29,9 +29,6 @@ public class AuthController : ControllerBase
         _changePasswordValidator = changePasswordValidator;
     }
 
-    /// <summary>
-    /// Login with username and password
-    /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<Result<AuthResponseDto>>> Login(
@@ -55,9 +52,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Register a new user
-    /// </summary>
     [HttpPost("register")]
     [AllowAnonymous]
     public async Task<ActionResult<Result<AuthResponseDto>>> Register(
@@ -81,9 +75,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Refresh access token using refresh token
-    /// </summary>
     [HttpPost("refresh-token")]
     [AllowAnonymous]
     public async Task<ActionResult<Result<AuthResponseDto>>> RefreshToken(
@@ -105,9 +96,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Change password for authenticated user
-    /// </summary>
     [HttpPost("change-password")]
     [Authorize]
     public async Task<ActionResult<Result<bool>>> ChangePassword(
@@ -138,9 +126,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Get current user information
-    /// </summary>
     [HttpGet("me")]
     [Authorize]
     public ActionResult<object> GetCurrentUser()
@@ -165,9 +150,6 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Validate token
-    /// </summary>
     [HttpPost("validate-token")]
     [AllowAnonymous]
     public async Task<ActionResult<Result<bool>>> ValidateToken(

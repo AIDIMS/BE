@@ -2,9 +2,6 @@ using AIDIMS.Domain.Common;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents a notification sent to a user
-/// </summary>
 public class Notification : BaseAuditableEntity
 {
     public Guid UserId { get; set; }

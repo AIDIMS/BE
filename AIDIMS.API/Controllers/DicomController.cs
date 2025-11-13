@@ -23,9 +23,6 @@ public class DicomController : ControllerBase
         _fileValidator = fileValidator;
     }
 
-    /// <summary>
-    /// Upload a DICOM instance
-    /// </summary>
     [HttpPost("upload")]
     public async Task<ActionResult<Result<DicomUploadResultDto>>> UploadDicomInstance(
         IFormFile file,

@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace AIDIMS.API.Filters;
 
-/// <summary>
-/// Handler for Admin authorization requirement
-/// </summary>
 public class AdminRequirementHandler : AuthorizationHandler<AdminRequirement>
 {
     protected override Task HandleRequirementAsync(
@@ -24,9 +21,6 @@ public class AdminRequirementHandler : AuthorizationHandler<AdminRequirement>
     }
 }
 
-/// <summary>
-/// Handler for Doctor authorization requirement
-/// </summary>
 public class DoctorRequirementHandler : AuthorizationHandler<DoctorRequirement>
 {
     protected override Task HandleRequirementAsync(
@@ -44,9 +38,6 @@ public class DoctorRequirementHandler : AuthorizationHandler<DoctorRequirement>
     }
 }
 
-/// <summary>
-/// Handler for Technician authorization requirement
-/// </summary>
 public class TechnicianRequirementHandler : AuthorizationHandler<TechnicianRequirement>
 {
     protected override Task HandleRequirementAsync(
@@ -64,9 +55,6 @@ public class TechnicianRequirementHandler : AuthorizationHandler<TechnicianRequi
     }
 }
 
-/// <summary>
-/// Handler for Receptionist authorization requirement
-/// </summary>
 public class ReceptionistRequirementHandler : AuthorizationHandler<ReceptionistRequirement>
 {
     protected override Task HandleRequirementAsync(
@@ -84,9 +72,6 @@ public class ReceptionistRequirementHandler : AuthorizationHandler<ReceptionistR
     }
 }
 
-/// <summary>
-/// Handler for Medical Staff authorization requirement (Doctor or Technician)
-/// </summary>
 public class MedicalStaffRequirementHandler : AuthorizationHandler<MedicalStaffRequirement>
 {
     protected override Task HandleRequirementAsync(

@@ -9,9 +9,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AIDIMS.Infrastructure.Services;
 
-/// <summary>
-/// Service for generating and validating JWT tokens
-/// </summary>
 public class JwtService : IJwtService
 {
     private readonly string _secret;

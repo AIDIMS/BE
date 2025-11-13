@@ -3,9 +3,6 @@ using AIDIMS.Domain.Enums;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents a user in the system
-/// </summary>
 public class User : BaseAuditableEntity
 {
     public string Username { get; set; } = string.Empty;

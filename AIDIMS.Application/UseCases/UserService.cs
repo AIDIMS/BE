@@ -7,9 +7,6 @@ using AutoMapper;
 
 namespace AIDIMS.Application.UseCases;
 
-/// <summary>
-/// User service implementation
-/// </summary>
 public class UserService : IUserService
 {
     private readonly IRepository<User> _userRepository;

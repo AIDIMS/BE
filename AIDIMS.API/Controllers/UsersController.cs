@@ -27,9 +27,6 @@ public class UsersController : ControllerBase
         _updateUserValidator = updateUserValidator;
     }
 
-    /// <summary>
-    /// Get all users with pagination (Admin only)
-    /// </summary>
     [HttpGet]
     [AdminOnly]
     public async Task<ActionResult<Result<PagedResult<UserDto>>>> GetAll(
@@ -47,9 +44,6 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Get user by ID
-    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<Result<UserDto>>> GetById(
         Guid id,
@@ -65,9 +59,6 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Create a new user (Admin only)
-    /// </summary>
     [HttpPost]
     [AdminOnly]
     public async Task<ActionResult<Result<UserDto>>> Create(
@@ -95,9 +86,6 @@ public class UsersController : ControllerBase
             result);
     }
 
-    /// <summary>
-    /// Update an existing user (Admin only)
-    /// </summary>
     [HttpPut("{id}")]
     [AdminOnly]
     public async Task<ActionResult<Result<UserDto>>> Update(
@@ -123,9 +111,6 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Delete a user (Admin only)
-    /// </summary>
     [HttpDelete("{id}")]
     [AdminOnly]
     public async Task<ActionResult<Result>> Delete(

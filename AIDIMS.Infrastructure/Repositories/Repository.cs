@@ -6,9 +6,6 @@ using System.Linq.Expressions;
 
 namespace AIDIMS.Infrastructure.Repositories;
 
-/// <summary>
-/// Generic repository implementation
-/// </summary>
 public class Repository<T> : IRepository<T> where T : BaseEntity
 {
     protected readonly ApplicationDbContext _context;

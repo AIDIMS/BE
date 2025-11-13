@@ -3,9 +3,6 @@ using AIDIMS.Domain.Enums;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents a diagnosis report for a DICOM study
-/// </summary>
 public class Diagnosis : BaseAuditableEntity
 {
     public Guid StudyId { get; set; }

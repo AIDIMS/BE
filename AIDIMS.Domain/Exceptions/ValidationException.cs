@@ -1,8 +1,5 @@
 namespace AIDIMS.Domain.Exceptions;
 
-/// <summary>
-/// Exception thrown when validation fails
-/// </summary>
 public class ValidationException : DomainException
 {
     public IDictionary<string, string[]> Errors { get; }

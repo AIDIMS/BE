@@ -2,9 +2,6 @@ using AIDIMS.Domain.Common;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents AI analysis results for a DICOM study
-/// </summary>
 public class AiResult : BaseAuditableEntity
 {
     public Guid StudyId { get; set; }

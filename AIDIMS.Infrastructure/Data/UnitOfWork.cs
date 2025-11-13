@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace AIDIMS.Infrastructure.Data;
 
-/// <summary>
-/// Unit of Work implementation
-/// </summary>
 public class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _context;

@@ -5,9 +5,6 @@ using System.Text.Json;
 
 namespace AIDIMS.API.Middleware;
 
-/// <summary>
-/// Global exception handling middleware
-/// </summary>
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
@@ -69,9 +66,6 @@ public class ExceptionHandlingMiddleware
     }
 }
 
-/// <summary>
-/// Extension method for adding exception handling middleware
-/// </summary>
 public static class ExceptionHandlingMiddlewareExtensions
 {
     public static IApplicationBuilder UseExceptionHandling(this IApplicationBuilder builder)

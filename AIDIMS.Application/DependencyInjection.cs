@@ -6,9 +6,6 @@ using System.Reflection;
 
 namespace AIDIMS.Application;
 
-/// <summary>
-/// Dependency injection configuration for Application layer
-/// </summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)

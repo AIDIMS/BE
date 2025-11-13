@@ -3,9 +3,6 @@ using FluentValidation;
 
 namespace AIDIMS.Application.Validators;
 
-/// <summary>
-/// Validator for CreateUserDto
-/// </summary>
 public class CreateUserDtoValidator : AbstractValidator<CreateUserDto>
 {
     public CreateUserDtoValidator()

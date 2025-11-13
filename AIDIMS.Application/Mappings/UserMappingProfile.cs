@@ -4,9 +4,6 @@ using AIDIMS.Domain.Entities;
 
 namespace AIDIMS.Application.Mappings;
 
-/// <summary>
-/// AutoMapper profile for User mappings
-/// </summary>
 public class UserMappingProfile : Profile
 {
     public UserMappingProfile()

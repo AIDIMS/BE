@@ -3,9 +3,6 @@ using AIDIMS.Domain.Enums;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents an imaging order
-/// </summary>
 public class ImagingOrder : BaseAuditableEntity
 {
     public Guid VisitId { get; set; }

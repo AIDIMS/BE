@@ -8,9 +8,6 @@ using Microsoft.Extensions.Configuration;
 
 namespace AIDIMS.Application.UseCases;
 
-/// <summary>
-/// Authentication service implementation
-/// </summary>
 public class AuthService : IAuthService
 {
     private readonly IRepository<User> _userRepository;

@@ -2,9 +2,6 @@ using AIDIMS.Domain.Common;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents a refresh token for user authentication
-/// </summary>
 public class RefreshToken : BaseEntity
 {
     public Guid UserId { get; set; }

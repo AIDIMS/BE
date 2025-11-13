@@ -3,9 +3,6 @@ using AIDIMS.Domain.Enums;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents a patient
-/// </summary>
 public class Patient : BaseAuditableEntity
 {
     public string PatientCode { get; set; } = string.Empty;
