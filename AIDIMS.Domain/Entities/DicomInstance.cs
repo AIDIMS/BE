@@ -2,9 +2,6 @@ using AIDIMS.Domain.Common;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents a single DICOM instance
-/// </summary>
 public class DicomInstance : BaseAuditableEntity
 {
     public Guid SeriesId { get; set; }

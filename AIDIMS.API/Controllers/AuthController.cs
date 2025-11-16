@@ -14,24 +14,18 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IValidator<LoginDto> _loginValidator;
-    private readonly IValidator<RegisterDto> _registerValidator;
     private readonly IValidator<ChangePasswordDto> _changePasswordValidator;
 
     public AuthController(
         IAuthService authService,
         IValidator<LoginDto> loginValidator,
-        IValidator<RegisterDto> registerValidator,
         IValidator<ChangePasswordDto> changePasswordValidator)
     {
         _authService = authService;
         _loginValidator = loginValidator;
-        _registerValidator = registerValidator;
         _changePasswordValidator = changePasswordValidator;
     }
 
-    /// <summary>
-    /// Login with username and password
-    /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<Result<AuthResponseDto>>> Login(
@@ -55,35 +49,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Register a new user
-    /// </summary>
-    [HttpPost("register")]
-    [AllowAnonymous]
-    public async Task<ActionResult<Result<AuthResponseDto>>> Register(
-        [FromBody] RegisterDto registerDto,
-        CancellationToken cancellationToken)
-    {
-        var validationResult = await _registerValidator.ValidateAsync(registerDto, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            var errors = validationResult.Errors.Select(e => e.ErrorMessage);
-            return BadRequest(Result<AuthResponseDto>.Failure("Validation failed", errors));
-        }
-
-        var result = await _authService.RegisterAsync(registerDto, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return BadRequest(result);
-        }
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Refresh access token using refresh token
-    /// </summary>
     [HttpPost("refresh-token")]
     [AllowAnonymous]
     public async Task<ActionResult<Result<AuthResponseDto>>> RefreshToken(
@@ -105,9 +70,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Change password for authenticated user
-    /// </summary>
     [HttpPost("change-password")]
     [Authorize]
     public async Task<ActionResult<Result<bool>>> ChangePassword(
@@ -138,9 +100,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Get current user information
-    /// </summary>
     [HttpGet("me")]
     [Authorize]
     public ActionResult<object> GetCurrentUser()
@@ -165,9 +124,6 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Validate token
-    /// </summary>
     [HttpPost("validate-token")]
     [AllowAnonymous]
     public async Task<ActionResult<Result<bool>>> ValidateToken(

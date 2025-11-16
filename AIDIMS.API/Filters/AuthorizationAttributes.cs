@@ -2,9 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace AIDIMS.API.Filters;
 
-/// <summary>
-/// Attribute to require Admin role
-/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class AdminOnlyAttribute : AuthorizeAttribute
 {
@@ -14,9 +11,6 @@ public class AdminOnlyAttribute : AuthorizeAttribute
     }
 }
 
-/// <summary>
-/// Attribute to require Doctor role
-/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class DoctorOnlyAttribute : AuthorizeAttribute
 {
@@ -26,9 +20,6 @@ public class DoctorOnlyAttribute : AuthorizeAttribute
     }
 }
 
-/// <summary>
-/// Attribute to require Technician role
-/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class TechnicianOnlyAttribute : AuthorizeAttribute
 {
@@ -38,9 +29,6 @@ public class TechnicianOnlyAttribute : AuthorizeAttribute
     }
 }
 
-/// <summary>
-/// Attribute to require Receptionist role
-/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class ReceptionistOnlyAttribute : AuthorizeAttribute
 {
@@ -50,9 +38,6 @@ public class ReceptionistOnlyAttribute : AuthorizeAttribute
     }
 }
 
-/// <summary>
-/// Attribute to require Medical Staff role (Doctor or Technician)
-/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class MedicalStaffOnlyAttribute : AuthorizeAttribute
 {
@@ -62,9 +47,6 @@ public class MedicalStaffOnlyAttribute : AuthorizeAttribute
     }
 }
 
-/// <summary>
-/// Attribute to require Admin or Doctor role
-/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class AdminOrDoctorAttribute : AuthorizeAttribute
 {
@@ -74,9 +56,6 @@ public class AdminOrDoctorAttribute : AuthorizeAttribute
     }
 }
 
-/// <summary>
-/// Attribute to require Admin or Technician role
-/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class AdminOrTechnicianAttribute : AuthorizeAttribute
 {

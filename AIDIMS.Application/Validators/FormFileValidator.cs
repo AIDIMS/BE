@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace AIDIMS.Application.Validators;
 
-/// <summary>
-/// Validator for IFormFile
-/// </summary>
 public class FormFileValidator : AbstractValidator<IFormFile>
 {
     private const long MaxFileSize = 100 * 1024 * 1024;
@@ -26,9 +23,6 @@ public class FormFileValidator : AbstractValidator<IFormFile>
     }
 }
 
-/// <summary>
-/// Validator for DicomUploadDto
-/// </summary>
 public class UploadDicomDtoValidator : AbstractValidator<DicomUploadDto>
 {
     public UploadDicomDtoValidator()

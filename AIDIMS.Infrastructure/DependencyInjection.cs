@@ -9,9 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AIDIMS.Infrastructure;
 
-/// <summary>
-/// Dependency injection configuration for Infrastructure layer
-/// </summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
@@ -38,7 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         // Add other infrastructure services here
-
+        services.AddHttpContextAccessor();
         return services;
     }
 }

@@ -1,8 +1,5 @@
 namespace AIDIMS.Domain.Common;
 
-/// <summary>
-/// Base entity class with common properties for all entities
-/// </summary>
 public abstract class BaseEntity
 {
     public Guid Id { get; set; }

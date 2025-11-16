@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace AIDIMS.Infrastructure.Services;
 
-/// <summary>
-/// Service for hashing and verifying passwords using PBKDF2
-/// </summary>
 public class PasswordHasher : IPasswordHasher
 {
     private const int SaltSize = 128 / 8; // 128 bits

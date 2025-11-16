@@ -1,8 +1,5 @@
 namespace AIDIMS.API.Filters;
 
-/// <summary>
-/// Policy names for authorization
-/// </summary>
 public static class PolicyNames
 {
     public const string AdminOnly = "AdminOnly";

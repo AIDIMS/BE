@@ -27,9 +27,6 @@ public class PatientsController : ControllerBase
         _updatePatientValidator = updatePatientValidator;
     }
 
-    /// <summary>
-    /// Get all patients with pagination
-    /// </summary>
     [HttpGet]
     public async Task<ActionResult<Result<PagedResult<PatientDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -58,9 +55,6 @@ public class PatientsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Get patient by ID
-    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<Result<PatientDto>>> GetById(
         Guid id,
@@ -76,9 +70,6 @@ public class PatientsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Create a new patient (Receptionist, Doctor, or Admin can create)
-    /// </summary>
     [HttpPost]
     [AdminOrDoctor]
     public async Task<ActionResult<Result<PatientDto>>> Create(
@@ -101,9 +92,6 @@ public class PatientsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Update an existing patient (Doctor or Admin can update)
-    /// </summary>
     [HttpPut("{id}")]
     [AdminOrDoctor]
     public async Task<ActionResult<Result<PatientDto>>> Update(
@@ -128,9 +116,6 @@ public class PatientsController : ControllerBase
 
     }
 
-    /// <summary>
-    /// Delete a patient by ID (Admin only)
-    /// </summary>
     [HttpDelete("{id}")]
     [AdminOnly]
     public async Task<ActionResult<Result>> Delete(

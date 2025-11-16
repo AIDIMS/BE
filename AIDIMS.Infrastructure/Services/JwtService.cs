@@ -9,9 +9,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AIDIMS.Infrastructure.Services;
 
-/// <summary>
-/// Service for generating and validating JWT tokens
-/// </summary>
 public class JwtService : IJwtService
 {
     private readonly string _secret;
@@ -49,7 +46,7 @@ public class JwtService : IJwtService
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(_accessTokenExpirationMinutes),
+            Expires = DateTime.UtcNow.AddMinutes(_accessTokenExpirationMinutes).AddHours(7),
             Issuer = _issuer,
             Audience = _audience,
             SigningCredentials = new SigningCredentials(

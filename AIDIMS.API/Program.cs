@@ -3,23 +3,17 @@ using AIDIMS.Application;
 using AIDIMS.Infrastructure;
 using AIDIMS.API.Middleware;
 using AIDIMS.API.Filters;
-using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
-    // .AddJsonOptions(options =>
-    // {
-    //     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    // });
 
 // Add health check
 builder.Services.AddHealthChecks()
@@ -201,39 +195,49 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+// Config Health Check endpoints
+app.MapGet("/health/live", async (HealthCheckService healthCheckService) =>
 {
-    Predicate = _ => false,
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync(JsonSerializer.Serialize(new
-        {
-            status = "Healthy"
-        }));
-    }
-});
+    var report = await healthCheckService.CheckHealthAsync(
+        check => check.Tags.Contains("self"),
+        cancellationToken: default
+    );
 
-app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    return Results.Ok(new
+    {
+        status = report.Status.ToString()
+    });
+})
+.WithName("HealthCheckLive")
+.WithTags("Health")
+.AllowAnonymous();
+
+app.MapGet("/health/ready", async (HealthCheckService healthCheckService) =>
 {
-    Predicate = _ => true,
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var result = JsonSerializer.Serialize(new
-        {
-            status = report.Status.ToString(),
-            details = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                duration = e.Value.Duration.TotalMilliseconds
-            })
-        });
-        await context.Response.WriteAsync(result);
-    }
-});
+    var report = await healthCheckService.CheckHealthAsync(cancellationToken: default);
 
-app.MapGet("/", () => "Server is running on port 5104").AllowAnonymous();
+    var result = new
+    {
+        status = report.Status.ToString(),
+        details = report.Entries.Select(e => new
+        {
+            name = e.Key,
+            status = e.Value.Status.ToString(),
+            duration = e.Value.Duration.TotalMilliseconds
+        })
+    };
+
+    return report.Status == HealthStatus.Healthy
+        ? Results.Ok(result)
+        : Results.StatusCode(503);
+})
+.WithName("HealthCheckReady")
+.WithTags("Health")
+.AllowAnonymous();
+
+app.MapGet("/", () => "Server is running...")
+    .WithName("Root")
+    .WithTags("Health")
+    .AllowAnonymous();
 
 app.Run();

@@ -1,8 +1,5 @@
 namespace AIDIMS.Domain.Exceptions;
 
-/// <summary>
-/// Base exception for domain-specific exceptions
-/// </summary>
 public abstract class DomainException : Exception
 {
     protected DomainException(string message) : base(message)

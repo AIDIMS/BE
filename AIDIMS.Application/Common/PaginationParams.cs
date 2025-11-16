@@ -1,8 +1,5 @@
 namespace AIDIMS.Application.Common;
 
-/// <summary>
-/// Pagination parameters
-/// </summary>
 public class PaginationParams
 {
     private const int MaxPageSize = 100;
@@ -17,9 +14,6 @@ public class PaginationParams
     }
 }
 
-/// <summary>
-/// Paginated result
-/// </summary>
 public class PagedResult<T>
 {
     public IEnumerable<T> Items { get; set; } = new List<T>();

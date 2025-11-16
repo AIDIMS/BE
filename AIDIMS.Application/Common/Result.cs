@@ -1,8 +1,5 @@
 namespace AIDIMS.Application.Common;
 
-/// <summary>
-/// Generic result wrapper for API responses
-/// </summary>
 public class Result<T>
 {
     public bool IsSuccess { get; set; }
@@ -31,9 +28,6 @@ public class Result<T>
     }
 }
 
-/// <summary>
-/// Result without data
-/// </summary>
 public class Result
 {
     public bool IsSuccess { get; set; }

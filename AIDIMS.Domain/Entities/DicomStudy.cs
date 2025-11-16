@@ -3,9 +3,6 @@ using AIDIMS.Domain.Enums;
 
 namespace AIDIMS.Domain.Entities;
 
-/// <summary>
-/// Represents a DICOM Study (một ca chụp)
-/// </summary>
 public class DicomStudy : BaseAuditableEntity
 {
     public Guid OrderId { get; set; }

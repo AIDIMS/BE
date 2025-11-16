@@ -1,17 +1,20 @@
-using AIDIMS.Domain.Common;
 using AIDIMS.Domain.Entities;
+using AIDIMS.Domain.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace AIDIMS.Infrastructure.Data;
 
-/// <summary>
-/// Application database context
-/// </summary>
 public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        IHttpContextAccessor httpContextAccessor) : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
     }
 
     // DbSets
@@ -36,23 +39,74 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 
+    private Guid? GetCurrentUserId()
+    {
+        var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userIdString, out var userId) ? userId : null;
+    }
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Auto-update audit fields
-        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        var entries = ChangeTracker.Entries<BaseEntity>();
+        var currentUserId = GetCurrentUserId();
+        var currentTime = DateTime.UtcNow.AddHours(7);
+
+        foreach (var entry in entries)
         {
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedAt = DateTime.UtcNow.AddHours(7);
-                    entry.Entity.Id = Guid.NewGuid();
+                    entry.Entity.CreatedAt = currentTime;
+                    entry.Entity.CreatedBy = currentUserId;
                     break;
+
                 case EntityState.Modified:
-                    entry.Entity.UpdatedAt = DateTime.UtcNow.AddHours(7);
+                    entry.Entity.UpdatedAt = currentTime;
+                    entry.Entity.UpdatedBy = currentUserId;
+                    break;
+
+                case EntityState.Deleted:
+                    // Soft delete
+                    entry.State = EntityState.Modified;
+                    entry.Entity.IsDeleted = true;
+                    entry.Entity.UpdatedAt = currentTime;
+                    entry.Entity.UpdatedBy = currentUserId;
                     break;
             }
         }
 
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        var entries = ChangeTracker.Entries<BaseEntity>();
+        var currentUserId = GetCurrentUserId();
+        var currentTime = DateTime.UtcNow.AddHours(7);
+
+        foreach (var entry in entries)
+        {
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    entry.Entity.CreatedAt = currentTime;
+                    entry.Entity.CreatedBy = currentUserId;
+                    break;
+
+                case EntityState.Modified:
+                    entry.Entity.UpdatedAt = currentTime;
+                    entry.Entity.UpdatedBy = currentUserId;
+                    break;
+
+                case EntityState.Deleted:
+                    entry.State = EntityState.Modified;
+                    entry.Entity.IsDeleted = true;
+                    entry.Entity.UpdatedAt = currentTime;
+                    entry.Entity.UpdatedBy = currentUserId;
+                    break;
+            }
+        }
+
+        return base.SaveChanges();
     }
 }
