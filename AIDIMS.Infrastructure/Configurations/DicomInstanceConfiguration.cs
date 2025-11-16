@@ -12,7 +12,7 @@ public class DicomInstanceConfiguration : IEntityTypeConfiguration<DicomInstance
 
         builder.HasKey(di => di.Id);
 
-        builder.Property(di => di.SeriesUid)
+        builder.Property(di => di.SeriesId)
             .IsRequired();
 
         builder.Property(di => di.SopInstanceUid)
@@ -23,13 +23,12 @@ public class DicomInstanceConfiguration : IEntityTypeConfiguration<DicomInstance
             .IsRequired()
             .HasMaxLength(255);
 
-        builder.Property(di => di.InstanceNumber)
-            .HasMaxLength(50);
+        builder.Property(di => di.InstanceNumber);
 
         // Relationships
         builder.HasOne(di => di.Series)
             .WithMany(ds => ds.Instances)
-            .HasForeignKey(di => di.SeriesUid)
+            .HasForeignKey(di => di.SeriesId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(di => di.Annotations)
@@ -40,7 +39,7 @@ public class DicomInstanceConfiguration : IEntityTypeConfiguration<DicomInstance
         // Indexes
         builder.HasIndex(di => di.SopInstanceUid).IsUnique();
         builder.HasIndex(di => di.OrthancInstanceId).IsUnique();
-        builder.HasIndex(di => di.SeriesUid);
+        builder.HasIndex(di => di.SeriesId);
 
         // Query filters for soft delete
         builder.HasQueryFilter(di => !di.IsDeleted);

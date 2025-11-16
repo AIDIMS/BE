@@ -42,7 +42,7 @@ public class DicomSeriesConfiguration : IEntityTypeConfiguration<DicomSeries>
 
         builder.HasMany(ds => ds.Instances)
             .WithOne(inst => inst.Series)
-            .HasForeignKey(inst => inst.SeriesUid)
+            .HasForeignKey(inst => inst.SeriesId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Indexes

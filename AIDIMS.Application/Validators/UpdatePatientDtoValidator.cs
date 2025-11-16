@@ -1,4 +1,5 @@
 using AIDIMS.Application.DTOs;
+using AIDIMS.Domain.Enums;
 using FluentValidation;
 
 namespace AIDIMS.Application.Validators;
@@ -17,10 +18,16 @@ public class UpdatePatientDtoValidator : AbstractValidator<UpdatePatientDto>
 
         RuleFor(x => x.Gender)
             .NotEmpty().WithMessage("Gender is required")
-            .Must(g => g == "Male" || g == "Female" || g == "Other")
-            .WithMessage("Gender must be 'Male', 'Female', or 'Other'");
+            .Must(BeValidGender)
+            .WithMessage("Invalid gender. Valid values: Male, Female, Other");
+        
         RuleFor(x => x.PhoneNumber)
             .Matches(@"^(?:\+84|0)\d{9}$").WithMessage("Invalid phone number format")
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
+    }
+
+    private bool BeValidGender(string gender)
+    {
+        return Enum.TryParse<Gender>(gender, true, out _);
     }
 }

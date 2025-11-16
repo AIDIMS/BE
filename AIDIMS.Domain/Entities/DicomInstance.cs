@@ -7,7 +7,7 @@ namespace AIDIMS.Domain.Entities;
 /// </summary>
 public class DicomInstance : BaseAuditableEntity
 {
-    public Guid SeriesUid { get; set; }
+    public Guid SeriesId { get; set; }
     public DicomSeries Series { get; set; } = default!;
 
     public string OrthancInstanceId { get; set; } = string.Empty;

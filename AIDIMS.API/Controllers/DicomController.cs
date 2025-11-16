@@ -29,8 +29,20 @@ public class DicomController : ControllerBase
     [HttpPost("upload")]
     public async Task<ActionResult<Result<DicomUploadResultDto>>> UploadDicomInstance(
         IFormFile file,
+        [FromForm] Guid? orderId,
+        [FromForm] Guid? patientId,
         CancellationToken cancellationToken)
     {
+        if (!orderId.HasValue)
+        {
+            return BadRequest(Result<DicomUploadResultDto>.Failure("OrderId is required"));
+        }
+        
+        if (!patientId.HasValue)
+        {
+            return BadRequest(Result<DicomUploadResultDto>.Failure("PatientId is required"));
+        }
+
         var validationResult = await _fileValidator.ValidateAsync(file, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -40,10 +52,12 @@ public class DicomController : ControllerBase
 
         var dicomDto = new DicomUploadDto
         {
-            File = file
+            File = file,
+            OrderId = orderId,
+            PatientId = patientId
         };
 
-        var result = await _dicomService.UploadInstanceAsync(dicomDto);
+        var result = await _dicomService.UploadInstanceAsync(dicomDto, cancellationToken);
         if (result == null)
         {
             return BadRequest(Result<DicomUploadResultDto>.Failure("Failed to upload DICOM instance"));
