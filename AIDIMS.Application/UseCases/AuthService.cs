@@ -173,25 +173,4 @@ public class AuthService : IAuthService
 
         return Result<bool>.Success(true, "Token is valid");
     }
-
-    public async Task<Result<bool>> RevokeRefreshTokensAsync(Guid userId, CancellationToken cancellationToken = default)
-    {
-        // Find all refresh tokens for the user
-        var tokens = await _refreshTokenRepository.FindAsync(rt => rt.UserId == userId, cancellationToken);
-
-        if (tokens == null || !tokens.Any())
-        {
-            return Result<bool>.Success(true, "No refresh tokens to revoke");
-        }
-
-        // Delete all tokens (physical remove from DB)
-        foreach (var token in tokens)
-        {
-            await _refreshTokenRepository.DeleteAsync(token, cancellationToken);
-        }
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return Result<bool>.Success(true, "Refresh tokens revoked successfully");
-    }
 }
