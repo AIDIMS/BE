@@ -44,7 +44,7 @@ public class UserService : IUserService
         PaginationParams paginationParams,
         CancellationToken cancellationToken = default)
     {
-        var users = await _userRepository.GetAllAsync(cancellationToken);
+        var users = await _userRepository.GetAllIncludingDeletedAsync(cancellationToken);
         var userList = users.ToList();
 
         var pagedUsers = userList
