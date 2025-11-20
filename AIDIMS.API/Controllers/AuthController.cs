@@ -46,39 +46,25 @@ public class AuthController : ControllerBase
             return Unauthorized(result);
         }
 
-        // Set refresh token in HttpOnly cookie
-        if (result.Data != null)
-        {
-            SetRefreshTokenCookie(result.Data.RefreshToken);
-            result.Data.RefreshToken = "";
-        }
-
         return Ok(result);
     }
 
     [HttpPost("refresh-token")]
     [AllowAnonymous]
-    public async Task<ActionResult<Result<AuthResponseDto>>> RefreshToken(CancellationToken cancellationToken)
+    public async Task<ActionResult<Result<AuthResponseDto>>> RefreshToken(
+        [FromBody] RefreshTokenDto refreshTokenDto,
+        CancellationToken cancellationToken)
     {
-        // Try to get refresh token from body or cookie
-        var refreshToken = Request.Cookies["refreshToken"];
-        if (string.IsNullOrEmpty(refreshToken))
+        if (string.IsNullOrEmpty(refreshTokenDto.RefreshToken))
         {
             return BadRequest(Result<AuthResponseDto>.Failure("Refresh token is required"));
         }
 
-        var result = await _authService.RefreshTokenAsync(refreshToken, cancellationToken);
+        var result = await _authService.RefreshTokenAsync(refreshTokenDto.RefreshToken, cancellationToken);
 
         if (!result.IsSuccess)
         {
             return Unauthorized(result);
-        }
-
-        // Set new refresh token in HttpOnly cookie
-        if (result.Data != null)
-        {
-            SetRefreshTokenCookie(result.Data.RefreshToken);
-            result.Data.RefreshToken = "";
         }
 
         return Ok(result);
@@ -151,43 +137,5 @@ public class AuthController : ControllerBase
 
         var result = await _authService.ValidateTokenAsync(token, cancellationToken);
         return Ok(result);
-    }
-
-    [HttpPost("logout")]
-    [Authorize]
-    public async Task<ActionResult<Result<bool>>> Logout(CancellationToken cancellationToken)
-    {
-        // Get user ID from JWT token
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
-        {
-            return Unauthorized(Result<bool>.Failure("Invalid token"));
-        }
-
-        // Revoke all refresh tokens from database
-        var result = await _authService.RevokeRefreshTokensAsync(userId, cancellationToken);
-
-        // Clear refresh token cookie
-        ClearRefreshTokenCookie();
-
-        return Ok(result);
-    }
-
-    private void SetRefreshTokenCookie(string refreshToken)
-    {
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true, // Set to true in production with HTTPS
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddDays(7).AddHours(7)
-        };
-
-        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
-    }
-
-    private void ClearRefreshTokenCookie()
-    {
-        Response.Cookies.Delete("refreshToken");
     }
 }
