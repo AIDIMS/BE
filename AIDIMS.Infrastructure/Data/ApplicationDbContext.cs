@@ -25,7 +25,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<DicomStudy> DicomStudies { get; set; }
     public DbSet<DicomSeries> DicomSeries { get; set; }
     public DbSet<DicomInstance> DicomInstances { get; set; }
-    public DbSet<AiResult> AiResults { get; set; }
+    public DbSet<AiAnalysis> AiAnalyses { get; set; }
+    public DbSet<AiFinding> AiFindings { get; set; }
     public DbSet<Diagnosis> Diagnoses { get; set; }
     public DbSet<ImageAnnotation> ImageAnnotations { get; set; }
     public DbSet<Notification> Notifications { get; set; }

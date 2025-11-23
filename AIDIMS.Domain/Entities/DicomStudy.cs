@@ -23,7 +23,7 @@ public class DicomStudy : BaseAuditableEntity
 
     // Navigation properties
     public ICollection<DicomSeries> Series { get; set; } = new List<DicomSeries>();
-    public AiResult? AiResult { get; set; }
+    public AiAnalysis? AiAnalysis { get; set; }
     public Diagnosis? Diagnosis { get; set; }
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 }

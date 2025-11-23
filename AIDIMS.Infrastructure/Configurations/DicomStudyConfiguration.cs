@@ -64,9 +64,9 @@ public class DicomStudyConfiguration : IEntityTypeConfiguration<DicomStudy>
             .HasForeignKey(ser => ser.StudyId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(ds => ds.AiResult)
-            .WithOne(ar => ar.Study)
-            .HasForeignKey<AiResult>(ar => ar.StudyId)
+        builder.HasOne(ds => ds.AiAnalysis)
+            .WithOne(a => a.Study)
+            .HasForeignKey<AiAnalysis>(a => a.StudyId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(ds => ds.Diagnosis)
