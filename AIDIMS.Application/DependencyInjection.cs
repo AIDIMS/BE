@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IImagingOrderService, ImagingOrderService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IDicomService, DicomService>();
+        services.AddScoped<IAiAnalysisService, AiAnalysisService>();
 
         // Add other services here
 

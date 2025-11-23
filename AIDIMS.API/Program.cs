@@ -42,6 +42,16 @@ builder.Services.AddHttpClient("OrthancClient", client =>
         new AuthenticationHeaderValue("Basic", basicAuthToken);
 });
 
+// Add AI Service HttpClient
+var aiServiceConfig = builder.Configuration.GetSection("AiService");
+var aiServiceBaseUrl = aiServiceConfig["BaseUrl"] ?? "http://localhost:8000"; // Default AI service URL
+
+builder.Services.AddHttpClient("AiServiceClient", client =>
+{
+    client.BaseAddress = new Uri(aiServiceBaseUrl);
+    client.Timeout = TimeSpan.FromMinutes(5); // AI analysis có thể mất thời gian
+});
+
 // Add Application layer
 builder.Services.AddApplication();
 
