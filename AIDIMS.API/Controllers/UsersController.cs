@@ -31,19 +31,12 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [AdminOnly]
     public async Task<ActionResult<Result<PagedResult<UserDto>>>> GetAll(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
+        [FromQuery] PaginationParams paginationParams,
+        [FromQuery] SearchUserDto filters,
         CancellationToken cancellationToken = default)
     {
-        var paginationParams = new PaginationParams
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-
-        var result = await _userService.GetAllAsync(paginationParams, cancellationToken);
+        var result = await _userService.GetAllAsync(paginationParams, filters, cancellationToken);
         return Ok(result);
     }
 

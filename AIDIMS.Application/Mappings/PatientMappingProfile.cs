@@ -29,6 +29,12 @@ public class PatientMappingProfile : Profile
 
         CreateMap<ImagingOrder, ImagingOrderDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+        
+        CreateMap<PatientVisit, PatientVisitDto>()
+            .ForMember(dest => dest.AssignedDoctorName, 
+                    opt => opt.MapFrom(src => src.AssignedDoctor.FullName))
+            .ForMember(dest => dest.PatientName, 
+                opt => opt.MapFrom(src => src.Patient.FullName));
 
         // DTO to Entity
         CreateMap<CreatePatientDto, Patient>()

@@ -82,7 +82,7 @@ public class PatientVisitsController : ControllerBase
     /// Create a new patient visit (Doctor or Admin)
     /// </summary>
     [HttpPost]
-    [AdminOrDoctor]
+    [AdminOrReceptionist]
     public async Task<ActionResult<Result<PatientVisitDto>>> Create(
         [FromBody] CreatePatientVisitDto dto,
         CancellationToken cancellationToken = default)

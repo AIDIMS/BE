@@ -42,10 +42,37 @@ public class UserService : IUserService
 
     public async Task<Result<PagedResult<UserDto>>> GetAllAsync(
         PaginationParams paginationParams,
+        SearchUserDto filters,
         CancellationToken cancellationToken = default)
     {
         var users = await _userRepository.GetAllIncludingDeletedAsync(cancellationToken);
-        var userList = users.ToList();
+        var query = users.AsEnumerable();
+
+        if (filters.Role.HasValue)
+        {
+            query = query.Where(u => u.Role == filters.Role.Value);
+        }
+
+        if (filters.Department.HasValue)
+        {
+            query = query.Where(u => u.Department == filters.Department.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters.FullName))
+        {
+            var name = filters.FullName.Trim().ToLower();
+            query = query.Where(u => !string.IsNullOrEmpty(u.FullName) 
+                                     && u.FullName.ToLower().Contains(name));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters.PhoneNumber))
+        {
+            var phone = filters.PhoneNumber.Trim();
+            query = query.Where(u => !string.IsNullOrEmpty(u.PhoneNumber) 
+                                     && u.PhoneNumber.Contains(phone));
+        }
+        
+        var userList = query.ToList();
 
         var pagedUsers = userList
             .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)

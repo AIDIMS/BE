@@ -7,6 +7,7 @@ public class PatientVisitDto
 {
     public Guid Id { get; set; }
     public Guid PatientId { get; set; }
+    public string PatientCode { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
     public Guid AssignedDoctorId { get; set; }
     public string AssignedDoctorName { get; set; } = string.Empty;

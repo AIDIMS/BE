@@ -10,12 +10,12 @@ namespace AIDIMS.Application.UseCases;
 
 public class PatientService : IPatientService
 {
-    private readonly IRepository<Patient> _patientRepository;
+    private readonly IPatientRepository _patientRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public PatientService(
-        IRepository<Patient> patientRepository,
+        IPatientRepository patientRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper)
     {
@@ -34,6 +34,7 @@ public class PatientService : IPatientService
         }
 
         var patientDto = _mapper.Map<PatientDetailsDto>(patient);
+
         return Result<PatientDetailsDto>.Success(patientDto);
     }
 

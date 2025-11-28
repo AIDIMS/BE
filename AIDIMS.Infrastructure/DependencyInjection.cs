@@ -23,6 +23,7 @@ public static class DependencyInjection
 
         // Register repositories
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IDicomStudyRepository, DicomStudyRepository>();
         services.AddScoped<IDicomSeriesRepository, DicomSeriesRepository>();
         services.AddScoped<IDicomInstanceRepository, DicomInstanceRepository>();
