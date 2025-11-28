@@ -71,7 +71,7 @@ public class PatientsController : ControllerBase
     }
 
     [HttpPost]
-    [AdminOrDoctor]
+    [AdminOrReceptionist]
     public async Task<ActionResult<Result<PatientDto>>> Create(
         [FromBody] CreatePatientDto dto,
         CancellationToken cancellationToken = default)

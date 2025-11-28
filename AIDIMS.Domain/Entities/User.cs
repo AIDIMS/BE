@@ -20,4 +20,6 @@ public class User : BaseAuditableEntity
     public ICollection<DicomStudy> AssignedStudies { get; set; } = new List<DicomStudy>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+    public string FullName => $"{FirstName} {LastName}".Trim();
 }

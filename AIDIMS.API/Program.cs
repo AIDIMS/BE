@@ -36,7 +36,7 @@ var basicAuthToken = Convert.ToBase64String(
 
 builder.Services.AddHttpClient("OrthancClient", client =>
 {
-    client.BaseAddress = new Uri(orthancBaseUrl);
+    client.BaseAddress = new Uri(orthancBaseUrl ?? "http://localhost:8042");
 
     client.DefaultRequestHeaders.Authorization =
         new AuthenticationHeaderValue("Basic", basicAuthToken);
@@ -44,12 +44,12 @@ builder.Services.AddHttpClient("OrthancClient", client =>
 
 // Add AI Service HttpClient
 var aiServiceConfig = builder.Configuration.GetSection("AiService");
-var aiServiceBaseUrl = aiServiceConfig["BaseUrl"] ?? "http://localhost:8000"; // Default AI service URL
+var aiServiceBaseUrl = aiServiceConfig["BaseUrl"] ?? "http://localhost:8000";
 
 builder.Services.AddHttpClient("AiServiceClient", client =>
 {
     client.BaseAddress = new Uri(aiServiceBaseUrl);
-    client.Timeout = TimeSpan.FromMinutes(5); // AI analysis có thể mất thời gian
+    client.Timeout = TimeSpan.FromMinutes(5);
 });
 
 // Add Application layer
@@ -123,6 +123,12 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAssertion(context =>
             context.User.HasClaim(c => c.Type == System.Security.Claims.ClaimTypes.Role &&
                 (c.Value == "Admin" || c.Value == "Technician"))));
+
+    // Admin or Receptionist policy
+    options.AddPolicy(PolicyNames.AdminOrReceptionist, policy =>
+        policy.RequireAssertion(context =>
+            context.User.HasClaim(c => c.Type == System.Security.Claims.ClaimTypes.Role &&
+                (c.Value == "Admin" || c.Value == "Receptionist"))));
 });
 
 // Register authorization handlers

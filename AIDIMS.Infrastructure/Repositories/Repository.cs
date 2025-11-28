@@ -20,7 +20,18 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted, cancellationToken);
+        var query = _dbSet.AsQueryable();
+
+        var navigations = _context.Model.FindEntityType(typeof(T))?.GetNavigations();
+        if (navigations != null)
+        {
+            foreach (var navigation in navigations)
+            {
+                query = query.Include(navigation.Name);
+            }
+        }
+
+        return await query.FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted, cancellationToken);
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)

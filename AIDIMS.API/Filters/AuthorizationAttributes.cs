@@ -64,3 +64,13 @@ public class AdminOrTechnicianAttribute : AuthorizeAttribute
         Policy = PolicyNames.AdminOrTechnician;
     }
 }
+
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+public class AdminOrReceptionistAttribute : AuthorizeAttribute
+{
+    public AdminOrReceptionistAttribute()
+    {
+        Policy = PolicyNames.AdminOrReceptionist;
+    }
+}

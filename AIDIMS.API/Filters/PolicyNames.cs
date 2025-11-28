@@ -9,4 +9,5 @@ public static class PolicyNames
     public const string MedicalStaffOnly = "MedicalStaffOnly";
     public const string AdminOrDoctor = "AdminOrDoctor";
     public const string AdminOrTechnician = "AdminOrTechnician";
+    public const string AdminOrReceptionist = "AdminOrReceptionist";
 }

@@ -24,17 +24,17 @@ public class PatientService : IPatientService
         _mapper = mapper;
     }
 
-    public async Task<Result<PatientDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Result<PatientDetailsDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var patient = await _patientRepository.GetByIdAsync(id, cancellationToken);
 
         if (patient == null)
         {
-            return Result<PatientDto>.Failure($"Patient with ID {id} not found");
+            return Result<PatientDetailsDto>.Failure($"Patient with ID {id} not found");
         }
 
-        var patientDto = _mapper.Map<PatientDto>(patient);
-        return Result<PatientDto>.Success(patientDto);
+        var patientDto = _mapper.Map<PatientDetailsDto>(patient);
+        return Result<PatientDetailsDto>.Success(patientDto);
     }
 
     public async Task<Result<PagedResult<PatientDto>>> GetAllAsync(
@@ -100,12 +100,54 @@ public class PatientService : IPatientService
 
     public async Task<Result<PatientDto>> CreateAsync(CreatePatientDto dto, CancellationToken cancellationToken = default)
     {
-        var patient = _mapper.Map<Patient>(dto);
-        var createdPatient = await _patientRepository.AddAsync(patient, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+        {
+            var allPatients = await _patientRepository.GetAllAsync(cancellationToken);
+            var existingPatient = allPatients.FirstOrDefault(p => 
+                !string.IsNullOrEmpty(p.PhoneNumber) && 
+                p.PhoneNumber == dto.PhoneNumber.Trim());
+            
+            if (existingPatient != null)
+            {
+                return Result<PatientDto>.Failure($"Patient with phone number {dto.PhoneNumber} already exists");
+            }
+        }
 
-        var patientDto = _mapper.Map<PatientDto>(createdPatient);
-        return Result<PatientDto>.Success(patientDto);
+        var patient = _mapper.Map<Patient>(dto);
+        
+        const int maxRetries = 5;
+        for (int i = 0; i < maxRetries; i++)
+        {
+            patient.PatientCode = await GenerateUniquePatientCodeAsync(cancellationToken);
+            
+            var allPatientsForCheck = await _patientRepository.GetAllAsync(cancellationToken);
+            var isDuplicate = allPatientsForCheck.Any(p => p.PatientCode == patient.PatientCode);
+            
+            if (!isDuplicate)
+            {
+                var createdPatient = await _patientRepository.AddAsync(patient, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                var patientDto = _mapper.Map<PatientDto>(createdPatient);
+                return Result<PatientDto>.Success(patientDto);
+            }
+            
+            if (i < maxRetries - 1)
+            {
+                await Task.Delay(10, cancellationToken);
+            }
+        }
+
+        return Result<PatientDto>.Failure("Failed to generate unique patient code after multiple attempts");
+    }
+
+    private async Task<string> GenerateUniquePatientCodeAsync(CancellationToken cancellationToken = default)
+    {
+        var datePart = DateTime.UtcNow.ToString("yyyyMMdd");
+        var ticksPart = (DateTime.UtcNow.Ticks % 1000000).ToString("D6");
+        var randomPart = Random.Shared.Next(10, 99);
+        
+        return await Task.FromResult($"P{datePart}{ticksPart}{randomPart}");
     }
 
     public async Task<Result<PatientDto>> UpdateAsync(Guid id, UpdatePatientDto dto, CancellationToken cancellationToken = default)
