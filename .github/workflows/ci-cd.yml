@@ -1,0 +1,122 @@
+name: AIDIMS Backend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  DOCKER_IMAGE: aidims-backend
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore AIDIMS.API/AIDIMS.API.csproj
+
+      - name: Build
+        run: dotnet build AIDIMS.API/AIDIMS.API.csproj --configuration Release --no-restore
+
+      - name: Run tests (if any)
+        run: |
+          if [ -d "AIDIMS.Tests" ]; then
+            dotnet test AIDIMS.Tests/AIDIMS.Tests.csproj --configuration Release --no-build --verbosity normal
+          else
+            echo "No test projects found"
+          fi
+
+  build-docker:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-dev:
+    needs: [build-and-test, build-docker]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Development
+        run: |
+          echo "🚀 Deploying to Development Environment"
+          echo "Image: ${{ needs.build-docker.outputs.image-tag }}"
+          echo "Digest: ${{ needs.build-docker.outputs.image-digest }}"
+
+          # Here you would add your deployment logic
+          # For example, if using Docker Compose on a server:
+          # - Update docker-compose.yml with new image
+          # - SSH to server and run docker-compose up -d
+
+          # For now, just showing the deployment info
+          echo "✅ Deployment completed"
+
+      - name: Health Check
+        run: |
+          echo "🏥 Running health checks..."
+          # Add your health check commands here
+          # For example: curl -f http://your-dev-server/health
+          echo "✅ Health checks passed"

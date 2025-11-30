@@ -1,0 +1,45 @@
+# Directories
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+
+# Files
+Dockerfile*
+docker-compose*
+**/*.md
+.dockerignore
+.env
+.git
+.gitignore
+.vs
+.vscode
+
+# Build artifacts
+*.user
+*.suo
+*.cache
+*.docx
+*.jfm
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# IDE files
+.idea/
+*.swp
+*.swo
+
+# Temp files
+*.tmp
+*.temp

@@ -1,0 +1,36 @@
+# Migration Dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:9.0
+WORKDIR /src
+
+# Copy csproj files and restore dependencies
+COPY ["AIDIMS.API/AIDIMS.API.csproj", "AIDIMS.API/"]
+COPY ["AIDIMS.Application/AIDIMS.Application.csproj", "AIDIMS.Application/"]
+COPY ["AIDIMS.Domain/AIDIMS.Domain.csproj", "AIDIMS.Domain/"]
+COPY ["AIDIMS.Infrastructure/AIDIMS.Infrastructure.csproj", "AIDIMS.Infrastructure/"]
+RUN dotnet restore "AIDIMS.API/AIDIMS.API.csproj"
+
+# Copy all source files
+COPY . .
+WORKDIR "/src/AIDIMS.API"
+
+# Build the project
+RUN dotnet build "AIDIMS.API.csproj" -c Release
+
+# Install dotnet ef tool
+RUN dotnet tool install --global dotnet-ef --version 9.0.0
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Create entry script
+RUN echo '#!/bin/bash\n\
+echo "Waiting for database to be ready..."\n\
+sleep 15\n\
+echo "Running database migrations..."\n\
+dotnet ef database update --configuration Release --verbose\n\
+if [ $? -eq 0 ]; then\n\
+    echo "Migration completed successfully"\n\
+else\n\
+    echo "Migration failed"\n\
+    exit 1\n\
+fi' > /entrypoint.sh && chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

@@ -34,11 +34,65 @@ services:
     networks:
       - orthanc-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U web_user -d web_db" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d AIDIMS_DB_Dev"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  # Database Migration Service
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.migration
+    container_name: aidims-migration
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres-web;Port=5432;Database=AIDIMS_DB_Dev;Username=postgres;Password=123qwe
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      postgres-web:
+        condition: service_healthy
+    networks:
+      - orthanc-network
+    volumes:
+      - .:/src
+    restart: "no"
+
+  # AIDIMS Backend API
+  aidims-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aidims-backend
+    ports:
+      - "5104:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres-web;Port=5432;Database=AIDIMS_DB_Dev;Username=postgres;Password=123qwe
+      - Orthanc__BaseUrl=http://orthanc:8042
+      - Orthanc__Username=admin
+      - Orthanc__Password=admin
+      - JWT__SecretKey=your-super-secret-key-at-least-32-characters-long
+      - JWT__Issuer=AIDIMS
+      - JWT__Audience=AIDIMS-Users
+      - JWT__AccessTokenExpirationMinutes=60
+      - JWT__RefreshTokenExpirationDays=7
+    depends_on:
+      postgres-web:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+      orthanc:
+        condition: service_healthy
+    networks:
+      - orthanc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Orthanc DICOM Server with OSIMIS Web Viewer and Explorer 2
   orthanc:
@@ -48,8 +102,8 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "4242:4242"  # DICOM port
-      - "8042:8042"  # HTTP port for Web UI and REST API
+      - "4242:4242" # DICOM port
+      - "8042:8042" # HTTP port for Web UI and REST API
     environment:
       - ORTHANC__NAME=AIDIMS Orthanc
       - ORTHANC__REMOTE_ACCESS_ALLOWED=true
