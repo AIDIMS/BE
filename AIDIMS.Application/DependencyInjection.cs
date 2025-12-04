@@ -1,6 +1,10 @@
+using System.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using AIDIMS.Application.Interfaces;
 using AIDIMS.Application.UseCases;
+using AIDIMS.Application.Events;
+using AIDIMS.Application.Events.Handlers;
 using FluentValidation;
 using System.Reflection;
 
@@ -15,6 +19,23 @@ public static class DependencyInjection
 
         // Register FluentValidation
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // Register Event System
+        var channel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
+        {
+            SingleReader = false,
+            SingleWriter = false
+        });
+
+        services.AddSingleton(channel.Reader);
+        services.AddSingleton(channel.Writer);
+        services.AddScoped<IEventPublisher, EventPublisher>();
+
+        // Register Event Handlers
+        services.AddScoped<IEventHandler<Domain.Events.DicomUploadedEvent>, DicomUploadedEventHandler>();
+
+        // Register Background Service để xử lý events
+        services.AddHostedService<EventProcessorBackgroundService>();
 
         // Register services
         services.AddScoped<IUserService, UserService>();

@@ -20,4 +20,11 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
                 .ThenInclude(v => v.ImagingOrders)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
+
+    public override async Task<IEnumerable<Patient>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(p => p.Visits)
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -3,8 +3,10 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using AIDIMS.Application.DTOs;
 using AIDIMS.Application.Interfaces;
+using AIDIMS.Application.Events;
 using AIDIMS.Domain.Entities;
 using AIDIMS.Domain.Enums;
+using AIDIMS.Domain.Events;
 using AIDIMS.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -20,6 +22,7 @@ public class DicomService : IDicomService
     private readonly IDicomInstanceRepository _instanceRepository;
     private readonly IRepository<ImagingOrder> _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEventPublisher _eventPublisher;
 
     public DicomService(
         IHttpClientFactory httpClientFactory, 
@@ -28,7 +31,8 @@ public class DicomService : IDicomService
         IDicomSeriesRepository seriesRepository,
         IDicomInstanceRepository instanceRepository,
         IRepository<ImagingOrder> orderRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IEventPublisher eventPublisher)
     {
         _httpClient = httpClientFactory.CreateClient("OrthancClient");
         _logger = logger;
@@ -37,6 +41,7 @@ public class DicomService : IDicomService
         _instanceRepository = instanceRepository;
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;
+        _eventPublisher = eventPublisher;
         
         _jsonOptions = new JsonSerializerOptions
         {
@@ -112,7 +117,7 @@ public class DicomService : IDicomService
             }
 
             // Save to database
-            await SaveDicomDataAsync(
+            var (studyId, instanceId) = await SaveDicomDataAsync(
                 studyMetadata, 
                 seriesMetadata, 
                 instanceMetadata,
@@ -122,7 +127,40 @@ public class DicomService : IDicomService
 
             await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-            _logger.LogInformation("Successfully saved DICOM data to database");
+            _logger.LogInformation("Successfully saved DICOM data to database. StudyId: {StudyId}, InstanceId: {InstanceId}", studyId, instanceId);
+
+            // Publish event trigger AI analysis
+            if (studyId != Guid.Empty && instanceId != Guid.Empty)
+            {
+                var dicomUploadedEvent = new DicomUploadedEvent
+                {
+                    StudyId = studyId,
+                    InstanceId = instanceId,
+                    UploadedAt = DateTime.UtcNow
+                };
+
+                // Publish event - không await để không block response
+                _logger.LogInformation("Publishing DicomUploadedEvent for StudyId: {StudyId}, InstanceId: {InstanceId}", studyId, instanceId);
+                
+                _ = _eventPublisher.PublishAsync(dicomUploadedEvent, cancellationToken)
+                    .ContinueWith(task =>
+                    {
+                        if (task.IsFaulted)
+                        {
+                            _logger.LogError(task.Exception?.GetBaseException(), 
+                                "Failed to publish DicomUploadedEvent for StudyId: {StudyId}. Error: {ErrorMessage}", 
+                                studyId, task.Exception?.GetBaseException()?.Message);
+                        }
+                        else if (task.IsCompletedSuccessfully)
+                        {
+                            _logger.LogInformation("DicomUploadedEvent published successfully for StudyId: {StudyId}. AI analysis will be triggered.", studyId);
+                        }
+                    }, TaskContinuationOptions.ExecuteSynchronously);
+            }
+            else
+            {
+                _logger.LogWarning("Cannot publish DicomUploadedEvent: StudyId or InstanceId is empty. StudyId: {StudyId}, InstanceId: {InstanceId}", studyId, instanceId);
+            }
         }
         catch (Exception ex)
         {
@@ -193,7 +231,7 @@ public class DicomService : IDicomService
         }
     }
 
-    private async Task SaveDicomDataAsync(
+    private async Task<(Guid StudyId, Guid InstanceId)> SaveDicomDataAsync(
         OrthancStudyDto studyMetadata,
         OrthancSeriesDto seriesMetadata,
         OrthancInstanceDto instanceMetadata,
@@ -326,6 +364,9 @@ public class DicomService : IDicomService
         {
             _logger.LogInformation("Instance already exists: Id={InstanceId}, SopInstanceUid={SopInstanceUid}", instance.Id, sopInstanceUid);
         }
+
+        // Return studyId and instanceId for AI analysis
+        return (study.Id, instance.Id);
     }
 
     private Modality ParseModality(string modalityStr)

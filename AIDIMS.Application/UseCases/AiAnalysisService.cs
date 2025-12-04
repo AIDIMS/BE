@@ -14,7 +14,8 @@ public class AiAnalysisService : IAiAnalysisService
     private readonly IRepository<DicomInstance> _instanceRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AiAnalysisService> _logger;
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _aiServiceClient;
+    private readonly HttpClient _orthancClient;
 
     public AiAnalysisService(
         IAiAnalysisRepository analysisRepository,
@@ -29,7 +30,8 @@ public class AiAnalysisService : IAiAnalysisService
         _instanceRepository = instanceRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
-        _httpClient = httpClientFactory.CreateClient("AiServiceClient");
+        _aiServiceClient = httpClientFactory.CreateClient("AiServiceClient");
+        _orthancClient = httpClientFactory.CreateClient("OrthancClient");
     }
 
     public async Task<AiAnalysisResponseDto> CreateAnalysisAsync(CreateAiAnalysisDto dto, CancellationToken cancellationToken = default)
@@ -123,18 +125,9 @@ public class AiAnalysisService : IAiAnalysisService
 
             _logger.LogInformation("Sending DICOM instance {InstanceId} to AI service for analysis", instance.Id);
 
-            // 3. Lấy ảnh DICOM từ Orthanc
-            var orthancClient = new HttpClient
-            {
-                BaseAddress = new Uri("http://localhost:8042")
-            };
-            
-            var basicAuth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:admin"));
-            orthancClient.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", basicAuth);
-
-            // Lấy ảnh preview (PNG) hoặc DICOM file từ Orthanc
-            var imageResponse = await orthancClient.GetAsync(
+            _logger.LogInformation("Retrieving image from Orthanc for instance: {OrthancInstanceId}", instance.OrthancInstanceId);
+            // 3. Lấy ảnh từ Orthanc
+            var imageResponse = await _orthancClient.GetAsync(
                 $"/instances/{instance.OrthancInstanceId}/preview", 
                 cancellationToken);
 
@@ -152,7 +145,7 @@ public class AiAnalysisService : IAiAnalysisService
             imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
             formContent.Add(imageContent, "image", $"{instance.OrthancInstanceId}.png");
 
-            var response = await _httpClient.PostAsync("/predict_findings", formContent, cancellationToken);
+            var response = await _aiServiceClient.PostAsync("/predict_findings", formContent, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
