@@ -97,4 +97,23 @@ public class AiAnalysisController : ControllerBase
 
         return Ok(Result<bool>.Success(true, "AI analysis marked as reviewed"));
     }
+
+    /// <summary>
+    /// Kiểm tra xem study có thể sử dụng AI analysis không
+    /// </summary>
+    [HttpGet("availability/study/{studyId}")]
+    public async Task<ActionResult<Result<AiAvailabilityDto>>> CheckAvailability(
+        Guid studyId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var availability = await _aiAnalysisService.CheckAiAvailabilityAsync(studyId, cancellationToken);
+            return Ok(Result<AiAvailabilityDto>.Success(availability));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(Result<AiAvailabilityDto>.Failure($"Failed to check AI availability: {ex.Message}"));
+        }
+    }
 }

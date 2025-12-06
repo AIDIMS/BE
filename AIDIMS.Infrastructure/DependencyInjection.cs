@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IDicomSeriesRepository, DicomSeriesRepository>();
         services.AddScoped<IDicomInstanceRepository, DicomInstanceRepository>();
         services.AddScoped<IAiAnalysisRepository, AiAnalysisRepository>();
+        services.AddScoped<IImageAnnotationRepository, ImageAnnotationRepository>();
 
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();

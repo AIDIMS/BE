@@ -70,3 +70,13 @@ public class AnalyzeDicomRequestDto
     public Guid StudyId { get; set; }
     public Guid? InstanceId { get; set; } // Optional: specific instance to analyze
 }
+
+// DTO để check AI availability cho một study
+public class AiAvailabilityDto
+{
+    public bool IsAvailable { get; set; }
+    public string? Reason { get; set; }
+    public string? BodyPart { get; set; }
+    public string? Modality { get; set; }
+    public string SupportedCombination { get; set; } = "Chest XRay";
+}
