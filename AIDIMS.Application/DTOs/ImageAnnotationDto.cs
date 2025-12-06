@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIDIMS.Application.DTOs;
 
 public class ImageAnnotationDto
@@ -6,6 +8,10 @@ public class ImageAnnotationDto
     public Guid InstanceId { get; set; }
     public string AnnotationType { get; set; } = string.Empty;
     public string AnnotationData { get; set; } = string.Empty;
+    
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public object? ParsedAnnotationData { get; set; }
+    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public string? InstanceSopInstanceUid { get; set; }
@@ -30,3 +36,11 @@ public class SearchImageAnnotationDto
     public string? AnnotationType { get; set; }
 }
 
+public class BoundingBoxAnnotationData
+{
+    [JsonPropertyName("label")]
+    public string Label { get; set; } = string.Empty;
+    
+    [JsonPropertyName("box")]
+    public List<int> Box { get; set; } = new();
+}
