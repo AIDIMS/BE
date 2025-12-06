@@ -9,4 +9,5 @@ public interface IAiAnalysisService
     Task<AiAnalysisResponseDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<AiAnalysisResponseDto?> GetByStudyIdAsync(Guid studyId, CancellationToken cancellationToken = default);
     Task<bool> MarkAsReviewedAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AiAvailabilityDto> CheckAiAvailabilityAsync(Guid studyId, CancellationToken cancellationToken = default);
 }

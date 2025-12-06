@@ -129,33 +129,59 @@ public class DicomService : IDicomService
 
             _logger.LogInformation("Successfully saved DICOM data to database. StudyId: {StudyId}, InstanceId: {InstanceId}", studyId, instanceId);
 
-            // Publish event trigger AI analysis
+            // Publish event trigger AI analysis - chỉ khi BodyPart là Chest và Modality là XRay
             if (studyId != Guid.Empty && instanceId != Guid.Empty)
             {
-                var dicomUploadedEvent = new DicomUploadedEvent
+             
+                var study = await _studyRepository.GetByIdAsync(studyId, cancellationToken);
+                if (study == null)
                 {
-                    StudyId = studyId,
-                    InstanceId = instanceId,
-                    UploadedAt = DateTime.UtcNow
-                };
+                    _logger.LogWarning("Cannot publish DicomUploadedEvent: Study not found. StudyId: {StudyId}", studyId);
+                }
+                else
+                {
+                    var shouldTriggerAI = study.Order != null 
+                        && study.Order.BodyPartRequested == BodyPart.Chest 
+                        && study.Modality == Modality.XRay;
 
-                // Publish event - không await để không block response
-                _logger.LogInformation("Publishing DicomUploadedEvent for StudyId: {StudyId}, InstanceId: {InstanceId}", studyId, instanceId);
-                
-                _ = _eventPublisher.PublishAsync(dicomUploadedEvent, cancellationToken)
-                    .ContinueWith(task =>
+                    if (shouldTriggerAI)
                     {
-                        if (task.IsFaulted)
+                        var dicomUploadedEvent = new DicomUploadedEvent
                         {
-                            _logger.LogError(task.Exception?.GetBaseException(), 
-                                "Failed to publish DicomUploadedEvent for StudyId: {StudyId}. Error: {ErrorMessage}", 
-                                studyId, task.Exception?.GetBaseException()?.Message);
-                        }
-                        else if (task.IsCompletedSuccessfully)
-                        {
-                            _logger.LogInformation("DicomUploadedEvent published successfully for StudyId: {StudyId}. AI analysis will be triggered.", studyId);
-                        }
-                    }, TaskContinuationOptions.ExecuteSynchronously);
+                            StudyId = studyId,
+                            InstanceId = instanceId,
+                            UploadedAt = DateTime.UtcNow
+                        };
+
+                        // Publish event - không await để không block response
+                        _logger.LogInformation(
+                            "Publishing DicomUploadedEvent for StudyId: {StudyId}, InstanceId: {InstanceId}. BodyPart: {BodyPart}, Modality: {Modality}", 
+                            studyId, instanceId, study.Order.BodyPartRequested, study.Modality);
+                        
+                        _ = _eventPublisher.PublishAsync(dicomUploadedEvent, cancellationToken)
+                            .ContinueWith(task =>
+                            {
+                                if (task.IsFaulted)
+                                {
+                                    _logger.LogError(task.Exception?.GetBaseException(), 
+                                        "Failed to publish DicomUploadedEvent for StudyId: {StudyId}. Error: {ErrorMessage}", 
+                                        studyId, task.Exception?.GetBaseException()?.Message);
+                                }
+                                else if (task.IsCompletedSuccessfully)
+                                {
+                                    _logger.LogInformation("DicomUploadedEvent published successfully for StudyId: {StudyId}. AI analysis will be triggered.", studyId);
+                                }
+                            }, TaskContinuationOptions.ExecuteSynchronously);
+                    }
+                    else
+                    {
+                        _logger.LogInformation(
+                            "Skipping AI analysis trigger for StudyId: {StudyId}. BodyPart: {BodyPart}, Modality: {Modality}. AI analysis only supports Chest XRay studies.",
+                            studyId, 
+                            study.Order?.BodyPartRequested ?? BodyPart.Other, 
+                            study.Modality);
+                    }
+                }
             }
             else
             {

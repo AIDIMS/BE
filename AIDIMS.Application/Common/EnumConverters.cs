@@ -98,3 +98,11 @@ public class GenderStringConverter : EnumStringConverter
 {
     public GenderStringConverter() : base(typeof(Gender)) { }
 }
+
+/// <summary>
+/// Converter for DiagnosisReportStatus enum values
+/// </summary>
+public class DiagnosisReportStatusStringConverter : EnumStringConverter
+{
+    public DiagnosisReportStatusStringConverter() : base(typeof(DiagnosisReportStatus)) { }
+}

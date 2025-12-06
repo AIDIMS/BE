@@ -1,6 +1,7 @@
 using AIDIMS.Application.DTOs;
 using AIDIMS.Application.Interfaces;
 using AIDIMS.Domain.Entities;
+using AIDIMS.Domain.Enums;
 using AIDIMS.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
@@ -98,14 +99,21 @@ public class AiAnalysisService : IAiAnalysisService
     {
         try
         {
-            // 1. Lấy thông tin Study
+            // 1. Kiểm tra điều kiện AI availability
+            var availability = await CheckAiAvailabilityAsync(studyId, cancellationToken);
+            if (!availability.IsAvailable)
+            {
+                throw new InvalidOperationException(availability.Reason ?? "AI analysis is not available for this study");
+            }
+
+            // 2. Lấy thông tin Study
             var study = await _studyRepository.GetByIdAsync(studyId, cancellationToken);
             if (study == null)
             {
                 throw new ArgumentException($"Study with ID {studyId} not found");
             }
 
-            // 2. Lấy instance để gửi cho AI
+            // 3. Lấy instance để gửi cho AI
             DicomInstance? instance = null;
             if (instanceId.HasValue)
             {
@@ -126,7 +134,7 @@ public class AiAnalysisService : IAiAnalysisService
             _logger.LogInformation("Sending DICOM instance {InstanceId} to AI service for analysis", instance.Id);
 
             _logger.LogInformation("Retrieving image from Orthanc for instance: {OrthancInstanceId}", instance.OrthancInstanceId);
-            // 3. Lấy ảnh từ Orthanc
+            // 4. Lấy ảnh từ Orthanc
             var imageResponse = await _orthancClient.GetAsync(
                 $"/instances/{instance.OrthancInstanceId}/preview", 
                 cancellationToken);
@@ -163,7 +171,7 @@ public class AiAnalysisService : IAiAnalysisService
 
             _logger.LogInformation("Received AI analysis result with {FindingCount} findings", aiResult.Findings.Count);
 
-            // 6. Lưu kết quả vào database
+            // 5. Lưu kết quả vào database
             var createDto = new CreateAiAnalysisDto
             {
                 StudyId = studyId,
@@ -205,6 +213,49 @@ public class AiAnalysisService : IAiAnalysisService
 
         _logger.LogInformation("Marked analysis {AnalysisId} as reviewed", id);
         return true;
+    }
+
+    public async Task<AiAvailabilityDto> CheckAiAvailabilityAsync(Guid studyId, CancellationToken cancellationToken = default)
+    {
+        var study = await _studyRepository.GetByIdAsync(studyId, cancellationToken);
+        if (study == null)
+        {
+            return new AiAvailabilityDto
+            {
+                IsAvailable = false,
+                Reason = "Study not found"
+            };
+        }
+
+        var isAvailable = study.Order != null 
+            && study.Order.BodyPartRequested == BodyPart.Chest 
+            && study.Modality == Modality.XRay;
+
+        if (isAvailable)
+        {
+            return new AiAvailabilityDto
+            {
+                IsAvailable = true,
+                BodyPart = study.Order.BodyPartRequested.ToString(),
+                Modality = study.Modality.ToString(),
+                SupportedCombination = "Chest XRay"
+            };
+        }
+        else
+        {
+            var bodyPart = study.Order?.BodyPartRequested.ToString() ?? "Unknown";
+            var modality = study.Modality.ToString();
+            var reason = $"AI analysis is only available for Chest XRay studies. Current study: {bodyPart} {modality}";
+
+            return new AiAvailabilityDto
+            {
+                IsAvailable = false,
+                Reason = reason,
+                BodyPart = bodyPart,
+                Modality = modality,
+                SupportedCombination = "Chest XRay"
+            };
+        }
     }
 
     private static AiAnalysisResponseDto MapToDto(AiAnalysis analysis)
