@@ -3,10 +3,10 @@ using AIDIMS.Application;
 using AIDIMS.Infrastructure;
 using AIDIMS.API.Middleware;
 using AIDIMS.API.Filters;
-using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
