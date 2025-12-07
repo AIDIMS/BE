@@ -60,4 +60,14 @@ public class DicomInstanceRepository : Repository<DicomInstance>, IDicomInstance
         return await _dbSet
             .FirstOrDefaultAsync(i => i.OrthancInstanceId == orthancInstanceId && !i.IsDeleted, cancellationToken);
     }
+
+    public async Task<IEnumerable<DicomInstance>> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(i => i.Series)
+                .ThenInclude(s => s.Study)
+                    .ThenInclude(st => st.Order)
+            .Where(i => i.Series.Study.Order!.Id == orderId && !i.IsDeleted)
+            .ToListAsync(cancellationToken);
+    }
 }

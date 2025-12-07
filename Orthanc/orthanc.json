@@ -3,10 +3,7 @@
   "StorageDirectory": "/var/lib/orthanc/db",
   "IndexDirectory": "/var/lib/orthanc/db",
   "RemoteAccessAllowed": true,
-  "AuthenticationEnabled": true,
-  "RegisteredUsers": {
-    "admin": "admin"
-  },
+  "AuthenticationEnabled": false,
   "PostgreSQL": {
     "EnableIndex": true,
     "EnableStorage": false,
@@ -51,9 +48,7 @@
   "DicomTlsEnabled": false,
   "DicomModalities": {},
   "OrthancPeers": {},
-  "Plugins": [
-    "/usr/share/orthanc/plugins"
-  ],
+  "Plugins": ["/usr/share/orthanc/plugins"],
   "LuaScripts": [],
   "HttpHeaders": {
     "Server": "AIDIMS Orthanc"

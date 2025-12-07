@@ -4,6 +4,18 @@ using System.Text.Json;
 
 namespace AIDIMS.Application.DTOs;
 
+public class DicomInstanceDto
+{
+    public Guid Id { get; set; }
+    public string InstanceId { get; set; } = string.Empty;
+    public Guid StudyId { get; set; }
+    public Guid SeriesId { get; set; }
+    public string Filename { get; set; } = string.Empty;
+    public DateTime UploadedAt { get; set; }
+    public string Modality { get; set; } = string.Empty;
+    public string BodyPart { get; set; } = string.Empty;
+}
+
 // Custom JsonConverter to handle mixed types in DICOM tags
 public class FlexibleDicomTagsConverter : JsonConverter<Dictionary<string, string>>
 {

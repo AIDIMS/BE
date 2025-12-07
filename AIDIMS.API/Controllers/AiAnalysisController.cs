@@ -84,6 +84,20 @@ public class AiAnalysisController : ControllerBase
         return Ok(Result<AiAnalysisResponseDto>.Success(result));
     }
 
+    [HttpGet("instance/{instanceId}")]
+    public async Task<ActionResult<Result<AiAnalysisResponseDto>>> GetByInstanceId(
+        string instanceId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _aiAnalysisService.GetByOrthancInstanceIdAsync(instanceId, cancellationToken);
+        if (result == null)
+        {
+            return NotFound(Result<AiAnalysisResponseDto>.Failure("AI analysis not found for this instance"));
+        }
+
+        return Ok(Result<AiAnalysisResponseDto>.Success(result));
+    }
+
     [HttpPatch("{id}/review")]
     public async Task<ActionResult<Result<bool>>> MarkAsReviewed(
         Guid id,

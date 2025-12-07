@@ -18,4 +18,5 @@ public interface IDicomInstanceRepository : IRepository<DicomInstance>
 {
     Task<DicomInstance?> GetBySopInstanceUidAsync(string sopInstanceUid, CancellationToken cancellationToken = default);
     Task<DicomInstance?> GetByOrthancInstanceIdAsync(string orthancInstanceId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<DicomInstance>> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken = default);
 }

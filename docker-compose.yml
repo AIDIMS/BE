@@ -71,8 +71,6 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=postgres-web;Port=5432;Database=AIDIMS_DB_Dev;Username=postgres;Password=123qwe
       - Orthanc__BaseUrl=http://orthanc:8042
-      - Orthanc__Username=admin
-      - Orthanc__Password=admin
       - JWT__SecretKey=your-super-secret-key-at-least-32-characters-long
       - JWT__Issuer=AIDIMS
       - JWT__Audience=AIDIMS-Users
@@ -108,8 +106,7 @@ services:
     environment:
       - ORTHANC__NAME=AIDIMS Orthanc
       - ORTHANC__REMOTE_ACCESS_ALLOWED=true
-      - ORTHANC__AUTHENTICATION_ENABLED=true
-      - ORTHANC__REGISTERED_USERS={"admin":"admin"}
+      - ORTHANC__AUTHENTICATION_ENABLED=false
       # PostgreSQL Plugin Configuration
       - ORTHANC__POSTGRESQL__ENABLE_INDEX=true
       - ORTHANC__POSTGRESQL__ENABLE_STORAGE=false

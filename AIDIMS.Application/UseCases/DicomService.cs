@@ -25,7 +25,7 @@ public class DicomService : IDicomService
     private readonly IEventPublisher _eventPublisher;
 
     public DicomService(
-        IHttpClientFactory httpClientFactory, 
+        IHttpClientFactory httpClientFactory,
         ILogger<DicomService> logger,
         IDicomStudyRepository studyRepository,
         IDicomSeriesRepository seriesRepository,
@@ -42,7 +42,7 @@ public class DicomService : IDicomService
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;
         _eventPublisher = eventPublisher;
-        
+
         _jsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -75,7 +75,7 @@ public class DicomService : IDicomService
             var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
             _logger.LogDebug("Orthanc Response JSON: {JsonResponse}", jsonString);
             uploadResult = JsonSerializer.Deserialize<DicomUploadResultDto>(jsonString, _jsonOptions);
-            
+
             if (uploadResult == null)
             {
                 return null;
@@ -118,8 +118,8 @@ public class DicomService : IDicomService
 
             // Save to database
             var (studyId, instanceId) = await SaveDicomDataAsync(
-                studyMetadata, 
-                seriesMetadata, 
+                studyMetadata,
+                seriesMetadata,
                 instanceMetadata,
                 uploadResult,
                 dicom,
@@ -132,7 +132,7 @@ public class DicomService : IDicomService
             // Publish event trigger AI analysis - chỉ khi BodyPart là Chest và Modality là XRay
             if (studyId != Guid.Empty && instanceId != Guid.Empty)
             {
-             
+
                 var study = await _studyRepository.GetByIdAsync(studyId, cancellationToken);
                 if (study == null)
                 {
@@ -140,8 +140,8 @@ public class DicomService : IDicomService
                 }
                 else
                 {
-                    var shouldTriggerAI = study.Order != null 
-                        && study.Order.BodyPartRequested == BodyPart.Chest 
+                    var shouldTriggerAI = study.Order != null
+                        && study.Order.BodyPartRequested == BodyPart.Chest
                         && study.Modality == Modality.XRay;
 
                     if (shouldTriggerAI)
@@ -155,16 +155,16 @@ public class DicomService : IDicomService
 
                         // Publish event - không await để không block response
                         _logger.LogInformation(
-                            "Publishing DicomUploadedEvent for StudyId: {StudyId}, InstanceId: {InstanceId}. BodyPart: {BodyPart}, Modality: {Modality}", 
+                            "Publishing DicomUploadedEvent for StudyId: {StudyId}, InstanceId: {InstanceId}. BodyPart: {BodyPart}, Modality: {Modality}",
                             studyId, instanceId, study.Order.BodyPartRequested, study.Modality);
-                        
+
                         _ = _eventPublisher.PublishAsync(dicomUploadedEvent, cancellationToken)
                             .ContinueWith(task =>
                             {
                                 if (task.IsFaulted)
                                 {
-                                    _logger.LogError(task.Exception?.GetBaseException(), 
-                                        "Failed to publish DicomUploadedEvent for StudyId: {StudyId}. Error: {ErrorMessage}", 
+                                    _logger.LogError(task.Exception?.GetBaseException(),
+                                        "Failed to publish DicomUploadedEvent for StudyId: {StudyId}. Error: {ErrorMessage}",
                                         studyId, task.Exception?.GetBaseException()?.Message);
                                 }
                                 else if (task.IsCompletedSuccessfully)
@@ -177,8 +177,8 @@ public class DicomService : IDicomService
                     {
                         _logger.LogInformation(
                             "Skipping AI analysis trigger for StudyId: {StudyId}. BodyPart: {BodyPart}, Modality: {Modality}. AI analysis only supports Chest XRay studies.",
-                            studyId, 
-                            study.Order?.BodyPartRequested ?? BodyPart.Other, 
+                            studyId,
+                            study.Order?.BodyPartRequested ?? BodyPart.Other,
                             study.Modality);
                     }
                 }
@@ -296,7 +296,7 @@ public class DicomService : IDicomService
                 throw new ArgumentException("OrderId and PatientId are required to create a new study");
             }
 
-            _logger.LogInformation("Creating new study: StudyUID={StudyUid}, PatientId={PatientId}, OrderId={OrderId}", 
+            _logger.LogInformation("Creating new study: StudyUID={StudyUid}, PatientId={PatientId}, OrderId={OrderId}",
                 studyUid, dicom.PatientId, dicom.OrderId);
 
             study = new DicomStudy
@@ -408,5 +408,64 @@ public class DicomService : IDicomService
             "NM" or "PT" => Modality.NuclearMedicine,
             _ => Modality.XRay
         };
+    }
+
+    public async Task<IEnumerable<DicomInstanceDto>> GetInstancesByOrderIdAsync(Guid orderId, CancellationToken cancellationToken = default)
+    {
+        var instances = await _instanceRepository.GetByOrderIdAsync(orderId, cancellationToken);
+
+        return instances.Select(instance => new DicomInstanceDto
+        {
+            Id = instance.Id,
+            InstanceId = instance.OrthancInstanceId, // Use OrthancInstanceId for download
+            StudyId = instance.Series.StudyId,
+            SeriesId = instance.SeriesId,
+            Filename = instance.ImagePath.Split('\\').Last() ?? $"{instance.SopInstanceUid}.dcm",
+            UploadedAt = instance.CreatedAt,
+            Modality = instance.Series.Study.Modality.ToString(),
+            BodyPart = instance.Series.Study.Order?.BodyPartRequested.ToString() ?? "Unknown"
+        });
+    }
+
+    public async Task<byte[]?> DownloadInstanceAsync(string instanceId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/instances/{instanceId}/file", cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to download instance {InstanceId} from Orthanc. Status: {StatusCode}",
+                    instanceId, response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading instance {InstanceId} from Orthanc", instanceId);
+            return null;
+        }
+    }
+
+    public async Task<byte[]?> GetInstancePreviewAsync(string instanceId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/instances/{instanceId}/preview", cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to get preview for instance {InstanceId} from Orthanc. Status: {StatusCode}",
+                    instanceId, response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting preview for instance {InstanceId} from Orthanc", instanceId);
+            return null;
+        }
     }
 }

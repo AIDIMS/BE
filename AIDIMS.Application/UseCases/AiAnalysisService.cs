@@ -13,6 +13,7 @@ public class AiAnalysisService : IAiAnalysisService
     private readonly IAiAnalysisRepository _analysisRepository;
     private readonly IRepository<DicomStudy> _studyRepository;
     private readonly IRepository<DicomInstance> _instanceRepository;
+    private readonly IDicomSeriesRepository _seriesRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AiAnalysisService> _logger;
     private readonly HttpClient _aiServiceClient;
@@ -22,6 +23,7 @@ public class AiAnalysisService : IAiAnalysisService
         IAiAnalysisRepository analysisRepository,
         IRepository<DicomStudy> studyRepository,
         IRepository<DicomInstance> instanceRepository,
+        IDicomSeriesRepository seriesRepository,
         IUnitOfWork unitOfWork,
         ILogger<AiAnalysisService> logger,
         IHttpClientFactory httpClientFactory)
@@ -29,6 +31,7 @@ public class AiAnalysisService : IAiAnalysisService
         _analysisRepository = analysisRepository;
         _studyRepository = studyRepository;
         _instanceRepository = instanceRepository;
+        _seriesRepository = seriesRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
         _aiServiceClient = httpClientFactory.CreateClient("AiServiceClient");
@@ -136,7 +139,7 @@ public class AiAnalysisService : IAiAnalysisService
             _logger.LogInformation("Retrieving image from Orthanc for instance: {OrthancInstanceId}", instance.OrthancInstanceId);
             // 4. Lấy ảnh từ Orthanc
             var imageResponse = await _orthancClient.GetAsync(
-                $"/instances/{instance.OrthancInstanceId}/preview", 
+                $"/instances/{instance.OrthancInstanceId}/preview",
                 cancellationToken);
 
             if (!imageResponse.IsSuccessStatusCode)
@@ -199,6 +202,48 @@ public class AiAnalysisService : IAiAnalysisService
         return analysis == null ? null : MapToDto(analysis);
     }
 
+    public async Task<AiAnalysisResponseDto?> GetByInstanceIdAsync(Guid instanceId, CancellationToken cancellationToken = default)
+    {
+        // Tìm study từ instance ID
+        var instance = await _instanceRepository.GetByIdAsync(instanceId, cancellationToken);
+        if (instance == null)
+        {
+            return null;
+        }
+
+        // Lấy series để tìm study
+        var series = await _seriesRepository.GetByIdAsync(instance.SeriesId, cancellationToken);
+        if (series == null)
+        {
+            return null;
+        }
+
+        var analysis = await _analysisRepository.GetByStudyIdAsync(series.StudyId, cancellationToken);
+        return analysis == null ? null : MapToDto(analysis);
+    }
+
+    public async Task<AiAnalysisResponseDto?> GetByOrthancInstanceIdAsync(string orthancInstanceId, CancellationToken cancellationToken = default)
+    {
+        // Tìm instance từ OrthancInstanceId
+        var instances = await _instanceRepository.GetAllAsync(cancellationToken);
+        var instance = instances.FirstOrDefault(i => i.OrthancInstanceId == orthancInstanceId);
+
+        if (instance == null)
+        {
+            return null;
+        }
+
+        // Lấy series để tìm study
+        var series = await _seriesRepository.GetByIdAsync(instance.SeriesId, cancellationToken);
+        if (series == null)
+        {
+            return null;
+        }
+
+        var analysis = await _analysisRepository.GetByStudyIdAsync(series.StudyId, cancellationToken);
+        return analysis == null ? null : MapToDto(analysis);
+    }
+
     public async Task<bool> MarkAsReviewedAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var analysis = await _analysisRepository.GetByIdAsync(id, cancellationToken);
@@ -227,8 +272,8 @@ public class AiAnalysisService : IAiAnalysisService
             };
         }
 
-        var isAvailable = study.Order != null 
-            && study.Order.BodyPartRequested == BodyPart.Chest 
+        var isAvailable = study.Order != null
+            && study.Order.BodyPartRequested == BodyPart.Chest
             && study.Modality == Modality.XRay;
 
         if (isAvailable)
