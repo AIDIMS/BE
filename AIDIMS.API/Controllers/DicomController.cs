@@ -1,7 +1,6 @@
 using AIDIMS.Application.Common;
 using AIDIMS.Application.DTOs;
 using AIDIMS.Application.Interfaces;
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,14 +12,10 @@ namespace AIDIMS.API.Controllers;
 public class DicomController : ControllerBase
 {
     private readonly IDicomService _dicomService;
-    private readonly IValidator<IFormFile> _fileValidator;
 
-    public DicomController(
-        IDicomService dicomService,
-        IValidator<IFormFile> fileValidator)
+    public DicomController(IDicomService dicomService)
     {
         _dicomService = dicomService;
-        _fileValidator = fileValidator;
     }
 
     [HttpPost("upload")]
@@ -40,11 +35,9 @@ public class DicomController : ControllerBase
             return BadRequest(Result<DicomUploadResultDto>.Failure("PatientId is required"));
         }
 
-        var validationResult = await _fileValidator.ValidateAsync(file, cancellationToken);
-        if (!validationResult.IsValid)
+        if (file == null || file.Length == 0)
         {
-            var errors = validationResult.Errors.Select(e => e.ErrorMessage);
-            return BadRequest(Result<DicomUploadResultDto>.Failure("Validation failed", errors));
+            return BadRequest(Result<DicomUploadResultDto>.Failure("File is required"));
         }
 
         var dicomDto = new DicomUploadDto

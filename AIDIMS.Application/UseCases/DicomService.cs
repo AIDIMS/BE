@@ -21,6 +21,7 @@ public class DicomService : IDicomService
     private readonly IDicomSeriesRepository _seriesRepository;
     private readonly IDicomInstanceRepository _instanceRepository;
     private readonly IRepository<ImagingOrder> _orderRepository;
+    private readonly IRepository<PatientVisit> _visitRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEventPublisher _eventPublisher;
 
@@ -31,6 +32,7 @@ public class DicomService : IDicomService
         IDicomSeriesRepository seriesRepository,
         IDicomInstanceRepository instanceRepository,
         IRepository<ImagingOrder> orderRepository,
+        IRepository<PatientVisit> visitRepository,
         IUnitOfWork unitOfWork,
         IEventPublisher eventPublisher)
     {
@@ -40,6 +42,7 @@ public class DicomService : IDicomService
         _seriesRepository = seriesRepository;
         _instanceRepository = instanceRepository;
         _orderRepository = orderRepository;
+        _visitRepository = visitRepository;
         _unitOfWork = unitOfWork;
         _eventPublisher = eventPublisher;
 
@@ -117,13 +120,32 @@ public class DicomService : IDicomService
             }
 
             // Save to database
-            var (studyId, instanceId) = await SaveDicomDataAsync(
+            var (studyId, instanceId, order) = await SaveDicomDataAsync(
                 studyMetadata,
                 seriesMetadata,
                 instanceMetadata,
                 uploadResult,
                 dicom,
                 cancellationToken);
+
+            // Update ImagingOrder status to Completed
+            if (order.Status != ImagingOrderStatus.Completed)
+            {
+                order.Status = ImagingOrderStatus.Completed;
+                await _orderRepository.UpdateAsync(order, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Updated ImagingOrder {OrderId} status to Completed", order.Id);
+            }
+
+            // Update PatientVisit status back to Waiting
+            var visit = await _visitRepository.GetByIdAsync(order.VisitId, cancellationToken);
+            if (visit != null && visit.Status != PatientVisitStatus.Waiting)
+            {
+                visit.Status = PatientVisitStatus.Waiting;
+                await _visitRepository.UpdateAsync(visit, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Updated PatientVisit {VisitId} status to Waiting", visit.Id);
+            }
 
             await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
@@ -156,7 +178,7 @@ public class DicomService : IDicomService
                         // Publish event - không await để không block response
                         _logger.LogInformation(
                             "Publishing DicomUploadedEvent for StudyId: {StudyId}, InstanceId: {InstanceId}. BodyPart: {BodyPart}, Modality: {Modality}",
-                            studyId, instanceId, study.Order.BodyPartRequested, study.Modality);
+                            studyId, instanceId, study.Order!.BodyPartRequested, study.Modality);
 
                         _ = _eventPublisher.PublishAsync(dicomUploadedEvent, cancellationToken)
                             .ContinueWith(task =>
@@ -257,7 +279,7 @@ public class DicomService : IDicomService
         }
     }
 
-    private async Task<(Guid StudyId, Guid InstanceId)> SaveDicomDataAsync(
+    private async Task<(Guid StudyId, Guid InstanceId, ImagingOrder Order)> SaveDicomDataAsync(
         OrthancStudyDto studyMetadata,
         OrthancSeriesDto seriesMetadata,
         OrthancInstanceDto instanceMetadata,
@@ -391,8 +413,8 @@ public class DicomService : IDicomService
             _logger.LogInformation("Instance already exists: Id={InstanceId}, SopInstanceUid={SopInstanceUid}", instance.Id, sopInstanceUid);
         }
 
-        // Return studyId and instanceId for AI analysis
-        return (study.Id, instance.Id);
+        // Return studyId, instanceId and order for status update
+        return (study.Id, instance.Id, order);
     }
 
     private Modality ParseModality(string modalityStr)
@@ -417,7 +439,7 @@ public class DicomService : IDicomService
         return instances.Select(instance => new DicomInstanceDto
         {
             Id = instance.Id,
-            InstanceId = instance.OrthancInstanceId, // Use OrthancInstanceId for download
+            InstanceId = instance.OrthancInstanceId,
             StudyId = instance.Series.StudyId,
             SeriesId = instance.SeriesId,
             Filename = instance.ImagePath.Split('\\').Last() ?? $"{instance.SopInstanceUid}.dcm",

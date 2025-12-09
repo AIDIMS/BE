@@ -156,6 +156,7 @@ public class AiAnalysisService : IAiAnalysisService
             imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
             formContent.Add(imageContent, "image", $"{instance.OrthancInstanceId}.png");
 
+            _logger.LogInformation("Sending POST request to AI service: /predict_findings");
             var response = await _aiServiceClient.PostAsync("/predict_findings", formContent, cancellationToken);
 
             if (!response.IsSuccessStatusCode)

@@ -4,7 +4,6 @@ using AIDIMS.Application.Interfaces;
 using AIDIMS.Domain.Entities;
 using AIDIMS.Domain.Enums;
 using AIDIMS.Domain.Interfaces;
-using AutoMapper;
 
 namespace AIDIMS.Application.UseCases;
 
@@ -15,22 +14,19 @@ public class ImagingOrderService : IImagingOrderService
     private readonly IRepository<Patient> _patientRepository;
     private readonly IRepository<User> _userRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
     public ImagingOrderService(
         IRepository<ImagingOrder> orderRepository,
         IRepository<PatientVisit> visitRepository,
         IRepository<Patient> patientRepository,
         IRepository<User> userRepository,
-        IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IUnitOfWork unitOfWork)
     {
         _orderRepository = orderRepository;
         _visitRepository = visitRepository;
         _patientRepository = patientRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<Result<ImagingOrderDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -188,6 +184,13 @@ public class ImagingOrderService : IImagingOrderService
         var createdOrder = await _orderRepository.AddAsync(order, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        if (visit.Status != PatientVisitStatus.Inprogress)
+        {
+            visit.Status = PatientVisitStatus.Inprogress;
+            await _visitRepository.UpdateAsync(visit, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
         var orderDto = await MapToDto(createdOrder, cancellationToken);
         return Result<ImagingOrderDto>.Success(orderDto);
     }
@@ -270,7 +273,17 @@ public class ImagingOrderService : IImagingOrderService
 
     private async Task<ImagingOrderDto> MapToDto(ImagingOrder order, CancellationToken cancellationToken)
     {
-        var dto = _mapper.Map<ImagingOrderDto>(order);
+        var dto = new ImagingOrderDto
+        {
+            Id = order.Id,
+            VisitId = order.VisitId,
+            RequestingDoctorId = order.RequestingDoctorId,
+            ModalityRequested = order.ModalityRequested.ToString(),
+            BodyPartRequested = order.BodyPartRequested.ToString(),
+            ReasonForStudy = order.ReasonForStudy,
+            Status = order.Status.ToString(),
+            CreatedAt = order.CreatedAt
+        };
 
         // Get visit and patient info
         var visit = await _visitRepository.GetByIdAsync(order.VisitId, cancellationToken);

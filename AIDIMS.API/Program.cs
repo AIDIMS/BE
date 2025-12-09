@@ -50,6 +50,10 @@ builder.Services.AddHttpClient("AiServiceClient", client =>
 {
     client.BaseAddress = new Uri(aiServiceBaseUrl);
     client.Timeout = TimeSpan.FromMinutes(5);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    AllowAutoRedirect = false
 });
 
 // Add Application layer
