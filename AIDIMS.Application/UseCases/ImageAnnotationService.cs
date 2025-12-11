@@ -28,14 +28,24 @@ public class ImageAnnotationService : IImageAnnotationService
 
     public async Task<Result<ImageAnnotationDto>> CreateAsync(CreateImageAnnotationDto dto, CancellationToken cancellationToken = default)
     {
-        // Validate that the instance exists
-        var instance = await _instanceRepository.GetByIdAsync(dto.InstanceId, cancellationToken);
+        // Find instance by OrthancInstanceId or SopInstanceUid
+        var instances = await _instanceRepository.GetAllAsync(cancellationToken);
+        var instance = instances.FirstOrDefault(i =>
+            i.OrthancInstanceId == dto.InstanceId ||
+            i.SopInstanceUid == dto.InstanceId);
+
         if (instance == null)
         {
             return Result<ImageAnnotationDto>.Failure($"DICOM Instance with ID {dto.InstanceId} not found");
         }
 
-        var annotation = _mapper.Map<ImageAnnotation>(dto);
+        var annotation = new ImageAnnotation
+        {
+            InstanceId = instance.Id,
+            AnnotationType = dto.AnnotationType,
+            AnnotationData = dto.AnnotationData
+        };
+
         var createdAnnotation = await _annotationRepository.AddAsync(annotation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -127,9 +137,20 @@ public class ImageAnnotationService : IImageAnnotationService
         return Result.Success();
     }
 
-    public async Task<Result<IEnumerable<ImageAnnotationDto>>> GetByInstanceIdAsync(Guid instanceId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<ImageAnnotationDto>>> GetByInstanceIdAsync(string instanceId, CancellationToken cancellationToken = default)
     {
-        var annotations = await _annotationRepository.GetByInstanceIdAsync(instanceId, cancellationToken);
+        // Find instance by OrthancInstanceId or SopInstanceUid
+        var instances = await _instanceRepository.GetAllAsync(cancellationToken);
+        var instance = instances.FirstOrDefault(i =>
+            i.OrthancInstanceId == instanceId ||
+            i.SopInstanceUid == instanceId);
+
+        if (instance == null)
+        {
+            return Result<IEnumerable<ImageAnnotationDto>>.Success(new List<ImageAnnotationDto>());
+        }
+
+        var annotations = await _annotationRepository.GetByInstanceIdAsync(instance.Id, cancellationToken);
         var annotationDtos = _mapper.Map<List<ImageAnnotationDto>>(annotations);
         return Result<IEnumerable<ImageAnnotationDto>>.Success(annotationDtos);
     }

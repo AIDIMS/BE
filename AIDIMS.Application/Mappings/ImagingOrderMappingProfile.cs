@@ -12,6 +12,7 @@ public class ImagingOrderMappingProfile : Profile
             .ForMember(dest => dest.ModalityRequested, opt => opt.MapFrom(src => src.ModalityRequested.ToString()))
             .ForMember(dest => dest.BodyPartRequested, opt => opt.MapFrom(src => src.BodyPartRequested.ToString()))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.StudyId, opt => opt.MapFrom(src => src.Studies.FirstOrDefault() != null ? src.Studies.FirstOrDefault()!.Id : (Guid?)null))
             .ForMember(dest => dest.PatientId, opt => opt.Ignore())
             .ForMember(dest => dest.PatientName, opt => opt.Ignore())
             .ForMember(dest => dest.RequestingDoctorName, opt => opt.Ignore());

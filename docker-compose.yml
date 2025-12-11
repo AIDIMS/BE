@@ -47,7 +47,7 @@ services:
       dockerfile: Dockerfile.migration
     container_name: aidims-migration
     environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres-web;Port=5432;Database=AIDIMS_DB_Dev;Username=postgres;Password=123qwe
+      - ConnectionStrings__DefaultConnection=Host=postgres-web;Port=5432;Database=AIDIMS_DB_Dev;Username=postgres;Password=123qwe;Timezone=Asia/Bangkok
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       postgres-web:
@@ -69,7 +69,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Host=postgres-web;Port=5432;Database=AIDIMS_DB_Dev;Username=postgres;Password=123qwe
+      - ConnectionStrings__DefaultConnection=Host=postgres-web;Port=5432;Database=AIDIMS_DB_Dev;Username=postgres;Password=123qwe;Timezone=Asia/Bangkok
       - Orthanc__BaseUrl=http://orthanc:8042
       - JWT__SecretKey=your-super-secret-key-at-least-32-characters-long
       - JWT__Issuer=AIDIMS

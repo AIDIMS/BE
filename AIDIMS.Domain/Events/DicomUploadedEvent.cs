@@ -7,6 +7,6 @@ public class DicomUploadedEvent
 {
     public Guid StudyId { get; set; }
     public Guid InstanceId { get; set; }
-    public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UploadedAt { get; set; }
 }
 

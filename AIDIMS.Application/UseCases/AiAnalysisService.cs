@@ -18,6 +18,7 @@ public class AiAnalysisService : IAiAnalysisService
     private readonly ILogger<AiAnalysisService> _logger;
     private readonly HttpClient _aiServiceClient;
     private readonly HttpClient _orthancClient;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
     public AiAnalysisService(
         IAiAnalysisRepository analysisRepository,
@@ -26,7 +27,8 @@ public class AiAnalysisService : IAiAnalysisService
         IDicomSeriesRepository seriesRepository,
         IUnitOfWork unitOfWork,
         ILogger<AiAnalysisService> logger,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        IDateTimeProvider dateTimeProvider)
     {
         _analysisRepository = analysisRepository;
         _studyRepository = studyRepository;
@@ -36,6 +38,7 @@ public class AiAnalysisService : IAiAnalysisService
         _logger = logger;
         _aiServiceClient = httpClientFactory.CreateClient("AiServiceClient");
         _orthancClient = httpClientFactory.CreateClient("OrthancClient");
+        _dateTimeProvider = dateTimeProvider;
     }
 
     public async Task<AiAnalysisResponseDto> CreateAnalysisAsync(CreateAiAnalysisDto dto, CancellationToken cancellationToken = default)
@@ -60,7 +63,7 @@ public class AiAnalysisService : IAiAnalysisService
             {
                 StudyId = dto.StudyId,
                 ModelVersion = dto.AnalysisResult.ModelVersion,
-                AnalysisDate = DateTime.UtcNow,
+                AnalysisDate = _dateTimeProvider.Now,
                 PrimaryFinding = primaryFinding?.Label,
                 OverallConfidence = primaryFinding?.ConfidenceScore,
                 IsReviewed = false

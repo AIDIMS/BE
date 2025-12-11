@@ -68,7 +68,7 @@ public class ImageAnnotationsController : ControllerBase
 
     [HttpGet("instance/{instanceId}")]
     public async Task<ActionResult<Result<IEnumerable<ImageAnnotationDto>>>> GetByInstanceId(
-        Guid instanceId,
+        string instanceId,
         CancellationToken cancellationToken = default)
     {
         var result = await _annotationService.GetByInstanceIdAsync(instanceId, cancellationToken);

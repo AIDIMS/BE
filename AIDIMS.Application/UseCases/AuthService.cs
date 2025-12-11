@@ -17,6 +17,7 @@ public class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
     public AuthService(
         IRepository<User> userRepository,
@@ -25,7 +26,8 @@ public class AuthService : IAuthService
         IJwtService jwtService,
         IPasswordHasher passwordHasher,
         IMapper mapper,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IDateTimeProvider dateTimeProvider)
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
@@ -34,6 +36,7 @@ public class AuthService : IAuthService
         _passwordHasher = passwordHasher;
         _mapper = mapper;
         _configuration = configuration;
+        _dateTimeProvider = dateTimeProvider;
     }
 
     public async Task<Result<AuthResponseDto>> LoginAsync(LoginDto loginDto, CancellationToken cancellationToken = default)
@@ -63,7 +66,7 @@ public class AuthService : IAuthService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Token = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")).AddHours(7),
+            ExpiresAt = _dateTimeProvider.Now.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")),
             IsRevoked = false
         };
 
@@ -75,7 +78,7 @@ public class AuthService : IAuthService
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")).AddHours(7),
+            ExpiresAt = _dateTimeProvider.Now.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")),
             User = userDto
         };
 
@@ -93,7 +96,9 @@ public class AuthService : IAuthService
             return Result<AuthResponseDto>.Failure("Invalid refresh token");
         }
 
-        if (!storedToken.IsActive)
+        // Check if token is expired or revoked (using Vietnam timezone)
+        var isExpired = _dateTimeProvider.Now >= storedToken.ExpiresAt;
+        if (storedToken.IsRevoked || isExpired)
         {
             return Result<AuthResponseDto>.Failure("Refresh token is expired or revoked");
         }
@@ -111,7 +116,7 @@ public class AuthService : IAuthService
 
         // Revoke old refresh token
         storedToken.IsRevoked = true;
-        storedToken.RevokedAt = DateTime.UtcNow.AddHours(7).ToString("o");
+        storedToken.RevokedAt = _dateTimeProvider.Now.ToString("o");
         storedToken.ReplacedByToken = newRefreshToken;
         await _refreshTokenRepository.UpdateAsync(storedToken, cancellationToken);
 
@@ -121,7 +126,7 @@ public class AuthService : IAuthService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Token = newRefreshToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")).AddHours(7),
+            ExpiresAt = _dateTimeProvider.Now.AddDays(int.Parse(_configuration["JwtSettings:RefreshTokenExpirationDays"] ?? "7")),
             IsRevoked = false
         };
 
@@ -133,7 +138,7 @@ public class AuthService : IAuthService
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")).AddHours(7),
+            ExpiresAt = _dateTimeProvider.Now.AddMinutes(int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60")),
             User = userDto
         };
 

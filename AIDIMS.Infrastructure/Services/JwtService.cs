@@ -46,7 +46,7 @@ public class JwtService : IJwtService
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(_accessTokenExpirationMinutes).AddHours(7),
+            Expires = DateTimeHelper.GetVietnamTime().AddMinutes(_accessTokenExpirationMinutes),
             Issuer = _issuer,
             Audience = _audience,
             SigningCredentials = new SigningCredentials(

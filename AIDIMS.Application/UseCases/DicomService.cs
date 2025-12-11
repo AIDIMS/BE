@@ -24,6 +24,7 @@ public class DicomService : IDicomService
     private readonly IRepository<PatientVisit> _visitRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEventPublisher _eventPublisher;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
     public DicomService(
         IHttpClientFactory httpClientFactory,
@@ -34,7 +35,8 @@ public class DicomService : IDicomService
         IRepository<ImagingOrder> orderRepository,
         IRepository<PatientVisit> visitRepository,
         IUnitOfWork unitOfWork,
-        IEventPublisher eventPublisher)
+        IEventPublisher eventPublisher,
+        IDateTimeProvider dateTimeProvider)
     {
         _httpClient = httpClientFactory.CreateClient("OrthancClient");
         _logger = logger;
@@ -45,6 +47,7 @@ public class DicomService : IDicomService
         _visitRepository = visitRepository;
         _unitOfWork = unitOfWork;
         _eventPublisher = eventPublisher;
+        _dateTimeProvider = dateTimeProvider;
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -172,7 +175,7 @@ public class DicomService : IDicomService
                         {
                             StudyId = studyId,
                             InstanceId = instanceId,
-                            UploadedAt = DateTime.UtcNow
+                            UploadedAt = _dateTimeProvider.Now
                         };
 
                         // Publish event - không await để không block response
@@ -301,12 +304,12 @@ public class DicomService : IDicomService
         {
             // Parse study date
             var studyDateStr = studyMetadata.MainDicomTags.GetValueOrDefault("StudyDate", string.Empty);
-            DateTime studyDate = DateTime.UtcNow;
+            DateTime studyDate = _dateTimeProvider.Now;
             if (!string.IsNullOrEmpty(studyDateStr) && studyDateStr.Length >= 8)
             {
                 if (DateTime.TryParseExact(studyDateStr, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var parsedDate))
                 {
-                    studyDate = DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+                    studyDate = DateTime.SpecifyKind(parsedDate, DateTimeKind.Unspecified);
                 }
             }
 

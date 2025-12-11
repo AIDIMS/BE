@@ -12,17 +12,23 @@ public class DiagnosisService : IDiagnosisService
 {
     private readonly IDiagnosisRepository _diagnosisRepository;
     private readonly IDicomStudyRepository _studyRepository;
+    private readonly IImagingOrderRepository _orderRepository;
+    private readonly IPatientVisitRepository _visitRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public DiagnosisService(
         IDiagnosisRepository diagnosisRepository,
         IDicomStudyRepository studyRepository,
+        IImagingOrderRepository orderRepository,
+        IPatientVisitRepository visitRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper)
     {
         _diagnosisRepository = diagnosisRepository;
         _studyRepository = studyRepository;
+        _orderRepository = orderRepository;
+        _visitRepository = visitRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
@@ -45,6 +51,20 @@ public class DiagnosisService : IDiagnosisService
 
         var diagnosis = _mapper.Map<Diagnosis>(dto);
         var createdDiagnosis = await _diagnosisRepository.AddAsync(diagnosis, cancellationToken);
+
+        // Update PatientVisit status to Done
+        // Load the Order to get VisitId
+        var order = await _orderRepository.GetByIdAsync(study.OrderId, cancellationToken);
+        if (order != null)
+        {
+            var visit = await _visitRepository.GetByIdAsync(order.VisitId, cancellationToken);
+            if (visit != null)
+            {
+                visit.Status = PatientVisitStatus.Done;
+                await _visitRepository.UpdateAsync(visit, cancellationToken);
+            }
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var diagnosisDto = _mapper.Map<DiagnosisDto>(createdDiagnosis);
@@ -144,6 +164,23 @@ public class DiagnosisService : IDiagnosisService
 
         _mapper.Map(dto, existingDiagnosis);
         await _diagnosisRepository.UpdateAsync(existingDiagnosis, cancellationToken);
+
+        // Update PatientVisit status to Done if not already done
+        var study = await _studyRepository.GetByIdAsync(existingDiagnosis.StudyId, cancellationToken);
+        if (study != null)
+        {
+            var order = await _orderRepository.GetByIdAsync(study.OrderId, cancellationToken);
+            if (order != null)
+            {
+                var visit = await _visitRepository.GetByIdAsync(order.VisitId, cancellationToken);
+                if (visit != null && visit.Status != PatientVisitStatus.Done)
+                {
+                    visit.Status = PatientVisitStatus.Done;
+                    await _visitRepository.UpdateAsync(visit, cancellationToken);
+                }
+            }
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var diagnosisDto = _mapper.Map<DiagnosisDto>(existingDiagnosis);

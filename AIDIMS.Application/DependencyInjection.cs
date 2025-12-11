@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IDicomService, DicomService>();
         services.AddScoped<IAiAnalysisService, AiAnalysisService>();
         services.AddScoped<IImageAnnotationService, ImageAnnotationService>();
+        services.AddScoped<IDiagnosisService, DiagnosisService>();
 
         // Add other services here
 

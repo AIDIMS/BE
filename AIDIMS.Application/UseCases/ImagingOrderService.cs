@@ -9,14 +9,14 @@ namespace AIDIMS.Application.UseCases;
 
 public class ImagingOrderService : IImagingOrderService
 {
-    private readonly IRepository<ImagingOrder> _orderRepository;
+    private readonly IImagingOrderRepository _orderRepository;
     private readonly IRepository<PatientVisit> _visitRepository;
     private readonly IRepository<Patient> _patientRepository;
     private readonly IRepository<User> _userRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public ImagingOrderService(
-        IRepository<ImagingOrder> orderRepository,
+        IImagingOrderRepository orderRepository,
         IRepository<PatientVisit> visitRepository,
         IRepository<Patient> patientRepository,
         IRepository<User> userRepository,
@@ -47,7 +47,8 @@ public class ImagingOrderService : IImagingOrderService
         SearchImagingOrderDto filters,
         CancellationToken cancellationToken = default)
     {
-        var orders = await _orderRepository.GetAllAsync(cancellationToken);
+        // Get all orders with Studies included
+        var orders = await _orderRepository.GetAllWithStudiesAsync(cancellationToken);
         var query = orders.AsEnumerable();
 
         // Apply filters
@@ -65,7 +66,7 @@ public class ImagingOrderService : IImagingOrderService
         {
             // Need to filter by patient - get all visits for this patient first
             var patientVisits = await _visitRepository.FindAsync(
-                v => v.PatientId == filters.PatientId.Value, 
+                v => v.PatientId == filters.PatientId.Value,
                 cancellationToken);
             var visitIds = patientVisits.Select(v => v.Id).ToHashSet();
             query = query.Where(o => visitIds.Contains(o.VisitId));
@@ -282,6 +283,7 @@ public class ImagingOrderService : IImagingOrderService
             BodyPartRequested = order.BodyPartRequested.ToString(),
             ReasonForStudy = order.ReasonForStudy,
             Status = order.Status.ToString(),
+            StudyId = order.Studies?.FirstOrDefault()?.Id,
             CreatedAt = order.CreatedAt
         };
 
@@ -304,7 +306,7 @@ public class ImagingOrderService : IImagingOrderService
     private static string GetDoctorFullName(User? user)
     {
         if (user == null) return "Unknown";
-        
+
         var fullName = $"{user.FirstName} {user.LastName}".Trim();
         return string.IsNullOrWhiteSpace(fullName) ? user.Username : fullName;
     }

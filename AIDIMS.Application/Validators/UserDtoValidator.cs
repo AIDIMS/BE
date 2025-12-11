@@ -39,11 +39,9 @@ public class CreateUserDtoValidator : AbstractValidator<CreateUserDto>
             .MaximumLength(15).WithMessage("Phone number must not exceed 15 characters");
 
         RuleFor(x => x.Role)
-            .NotEmpty().WithMessage("User role is required")
             .IsInEnum().WithMessage("Invalid user role");
 
         RuleFor(x => x.Department)
-            .NotEmpty().WithMessage("Department is required")
             .IsInEnum().WithMessage("Invalid department");
     }
 }
@@ -71,11 +69,9 @@ public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
             .MaximumLength(15).WithMessage("Phone number must not exceed 15 characters");
 
         RuleFor(x => x.Role)
-            .NotEmpty().WithMessage("User role is required")
             .IsInEnum().WithMessage("Invalid user role");
 
         RuleFor(x => x.Department)
-            .NotEmpty().WithMessage("Department is required")
             .IsInEnum().WithMessage("Invalid department");
     }
 }

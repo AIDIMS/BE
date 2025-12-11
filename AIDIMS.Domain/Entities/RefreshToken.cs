@@ -14,6 +14,8 @@ public class RefreshToken : BaseEntity
     // Navigation property
     public User User { get; set; } = null!;
 
-    public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
-    public bool IsActive => !IsRevoked && !IsExpired;
+    // Note: IsExpired and IsActive should be checked in service layer using IDateTimeProvider
+    // to ensure correct timezone handling (Vietnam timezone vs UTC)
+    // public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
+    // public bool IsActive => !IsRevoked && !IsExpired;
 }

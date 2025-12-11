@@ -19,19 +19,28 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+                b =>
+                {
+                    b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+                }));
 
         // Register repositories
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IPatientRepository, PatientRepository>();
+        services.AddScoped<IPatientVisitRepository, PatientVisitRepository>();
+        services.AddScoped<IImagingOrderRepository, ImagingOrderRepository>();
         services.AddScoped<IDicomStudyRepository, DicomStudyRepository>();
         services.AddScoped<IDicomSeriesRepository, DicomSeriesRepository>();
         services.AddScoped<IDicomInstanceRepository, DicomInstanceRepository>();
         services.AddScoped<IAiAnalysisRepository, AiAnalysisRepository>();
         services.AddScoped<IImageAnnotationRepository, ImageAnnotationRepository>();
+        services.AddScoped<IDiagnosisRepository, DiagnosisRepository>();
 
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Register DateTime provider
+        services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
         // Register authentication services
         services.AddScoped<IJwtService, JwtService>();

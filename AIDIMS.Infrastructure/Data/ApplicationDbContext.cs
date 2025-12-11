@@ -3,6 +3,7 @@ using AIDIMS.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using AIDIMS.Infrastructure.Services;
 
 namespace AIDIMS.Infrastructure.Data;
 
@@ -38,6 +39,19 @@ public class ApplicationDbContext : DbContext
 
         // Apply configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        // Configure all DateTime properties to store as UTC
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+                {
+                    // Configure to use timestamp without time zone in PostgreSQL
+                    property.SetColumnType("timestamp without time zone");
+                }
+            }
+        }
     }
 
     private Guid? GetCurrentUserId()
@@ -50,7 +64,7 @@ public class ApplicationDbContext : DbContext
     {
         var entries = ChangeTracker.Entries<BaseEntity>();
         var currentUserId = GetCurrentUserId();
-        var currentTime = DateTime.UtcNow.AddHours(7);
+        var currentTime = DateTime.SpecifyKind(DateTimeHelper.GetVietnamTime(), DateTimeKind.Unspecified);
 
         foreach (var entry in entries)
         {
@@ -83,7 +97,7 @@ public class ApplicationDbContext : DbContext
     {
         var entries = ChangeTracker.Entries<BaseEntity>();
         var currentUserId = GetCurrentUserId();
-        var currentTime = DateTime.UtcNow.AddHours(7);
+        var currentTime = DateTime.SpecifyKind(DateTimeHelper.GetVietnamTime(), DateTimeKind.Unspecified);
 
         foreach (var entry in entries)
         {

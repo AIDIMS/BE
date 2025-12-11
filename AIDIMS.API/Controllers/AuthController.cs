@@ -13,15 +13,18 @@ namespace AIDIMS.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IUserService _userService;
     private readonly IValidator<LoginDto> _loginValidator;
     private readonly IValidator<ChangePasswordDto> _changePasswordValidator;
 
     public AuthController(
         IAuthService authService,
+        IUserService userService,
         IValidator<LoginDto> loginValidator,
         IValidator<ChangePasswordDto> changePasswordValidator)
     {
         _authService = authService;
+        _userService = userService;
         _loginValidator = loginValidator;
         _changePasswordValidator = changePasswordValidator;
     }
@@ -116,26 +119,23 @@ public class AuthController : ControllerBase
 
     [HttpGet("me")]
     [Authorize]
-    public ActionResult<object> GetCurrentUser()
+    public async Task<ActionResult<UserDto>> GetCurrentUser(CancellationToken cancellationToken)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var username = User.FindFirst(ClaimTypes.Name)?.Value;
-        var email = User.FindFirst(ClaimTypes.Email)?.Value;
-        var firstName = User.FindFirst(ClaimTypes.GivenName)?.Value;
-        var lastName = User.FindFirst(ClaimTypes.Surname)?.Value;
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-        var department = User.FindFirst("Department")?.Value;
 
-        return Ok(new
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
         {
-            UserId = userId,
-            Username = username,
-            Email = email,
-            FirstName = firstName,
-            LastName = lastName,
-            Role = role,
-            Department = department
-        });
+            return Unauthorized();
+        }
+
+        var result = await _userService.GetByIdAsync(userGuid, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result.Data);
     }
 
     [HttpPost("validate-token")]

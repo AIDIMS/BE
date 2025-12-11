@@ -10,6 +10,6 @@ public interface IImageAnnotationService
     Task<Result<PagedResult<ImageAnnotationDto>>> GetAllAsync(PaginationParams paginationParams, SearchImageAnnotationDto filters, CancellationToken cancellationToken = default);
     Task<Result<ImageAnnotationDto>> UpdateAsync(Guid id, UpdateImageAnnotationDto dto, CancellationToken cancellationToken = default);
     Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<Result<IEnumerable<ImageAnnotationDto>>> GetByInstanceIdAsync(Guid instanceId, CancellationToken cancellationToken = default);
+    Task<Result<IEnumerable<ImageAnnotationDto>>> GetByInstanceIdAsync(string instanceId, CancellationToken cancellationToken = default);
 }
 

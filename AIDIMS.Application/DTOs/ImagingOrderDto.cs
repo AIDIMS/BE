@@ -15,6 +15,7 @@ public class ImagingOrderDto
     public string BodyPartRequested { get; set; } = string.Empty;
     public string? ReasonForStudy { get; set; }
     public string Status { get; set; } = string.Empty;
+    public Guid? StudyId { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 
@@ -22,13 +23,13 @@ public class CreateImagingOrderDto
 {
     public Guid VisitId { get; set; }
     public Guid RequestingDoctorId { get; set; }
-    
+
     [JsonConverter(typeof(ModalityStringConverter))]
     public string ModalityRequested { get; set; } = string.Empty;
-    
+
     [JsonConverter(typeof(BodyPartStringConverter))]
     public string BodyPartRequested { get; set; } = string.Empty;
-    
+
     public string? ReasonForStudy { get; set; }
 }
 
@@ -36,12 +37,12 @@ public class UpdateImagingOrderDto
 {
     [JsonConverter(typeof(ModalityStringConverter))]
     public string? ModalityRequested { get; set; }
-    
+
     [JsonConverter(typeof(BodyPartStringConverter))]
     public string? BodyPartRequested { get; set; }
-    
+
     public string? ReasonForStudy { get; set; }
-    
+
     [JsonConverter(typeof(ImagingOrderStatusStringConverter))]
     public string? Status { get; set; }
 }
