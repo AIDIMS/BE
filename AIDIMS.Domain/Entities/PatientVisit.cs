@@ -16,4 +16,5 @@ public class PatientVisit : BaseAuditableEntity
 
     // Navigation properties
     public ICollection<ImagingOrder> ImagingOrders { get; set; } = new List<ImagingOrder>();
+    public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 }

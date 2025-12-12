@@ -19,6 +19,9 @@ public class AiAnalysisService : IAiAnalysisService
     private readonly HttpClient _aiServiceClient;
     private readonly HttpClient _orthancClient;
     private readonly IDateTimeProvider _dateTimeProvider;
+    private readonly INotificationService _notificationService;
+    private readonly IRepository<PatientVisit> _visitRepository;
+    private readonly IRepository<ImagingOrder> _orderRepository;
 
     public AiAnalysisService(
         IAiAnalysisRepository analysisRepository,
@@ -28,7 +31,10 @@ public class AiAnalysisService : IAiAnalysisService
         IUnitOfWork unitOfWork,
         ILogger<AiAnalysisService> logger,
         IHttpClientFactory httpClientFactory,
-        IDateTimeProvider dateTimeProvider)
+        IDateTimeProvider dateTimeProvider,
+        INotificationService notificationService,
+        IRepository<PatientVisit> visitRepository,
+        IRepository<ImagingOrder> orderRepository)
     {
         _analysisRepository = analysisRepository;
         _studyRepository = studyRepository;
@@ -39,6 +45,9 @@ public class AiAnalysisService : IAiAnalysisService
         _aiServiceClient = httpClientFactory.CreateClient("AiServiceClient");
         _orthancClient = httpClientFactory.CreateClient("OrthancClient");
         _dateTimeProvider = dateTimeProvider;
+        _notificationService = notificationService;
+        _visitRepository = visitRepository;
+        _orderRepository = orderRepository;
     }
 
     public async Task<AiAnalysisResponseDto> CreateAnalysisAsync(CreateAiAnalysisDto dto, CancellationToken cancellationToken = default)
@@ -90,6 +99,25 @@ public class AiAnalysisService : IAiAnalysisService
 
             _logger.LogInformation("Created AI Analysis: {AnalysisId} for Study: {StudyId} with {FindingCount} findings",
                 analysis.Id, dto.StudyId, analysis.Findings.Count);
+
+            // Get study to find assigned doctor and visit
+            var study = await _studyRepository.GetByIdAsync(dto.StudyId, cancellationToken);
+            if (study != null)
+            {
+                // Get imaging order to find visit
+                var order = await _orderRepository.GetByIdAsync(study.OrderId, cancellationToken);
+
+                // Send notification to assigned doctor
+                await _notificationService.CreateAsync(new CreateNotificationDto
+                {
+                    UserId = study.AssignedDoctorId,
+                    Type = NotificationType.AiAnalysisCompleted,
+                    Title = "Phân tích AI hoàn tất",
+                    Message = $"Kết quả phân tích AI đã sẵn sàng. Phát hiện chính: {analysis.PrimaryFinding ?? "Không có"} (độ tin cậy: {(analysis.OverallConfidence.HasValue ? $"{analysis.OverallConfidence.Value:P0}" : "N/A")})",
+                    RelatedStudyId = dto.StudyId,
+                    RelatedVisitId = order?.VisitId
+                }, cancellationToken);
+            }
 
             return MapToDto(analysis);
         }

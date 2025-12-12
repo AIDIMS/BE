@@ -37,7 +37,7 @@ public static class DependencyInjection
         // Register Background Service để xử lý events
         services.AddHostedService<EventProcessorBackgroundService>();
 
-        // Register services
+        // Services
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPatientVisitService, PatientVisitService>();
@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IAiAnalysisService, AiAnalysisService>();
         services.AddScoped<IImageAnnotationService, ImageAnnotationService>();
         services.AddScoped<IDiagnosisService, DiagnosisService>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         // Add other services here
 

@@ -15,19 +15,22 @@ public class PatientVisitService : IPatientVisitService
     private readonly IRepository<User> _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
 
     public PatientVisitService(
         IRepository<PatientVisit> patientVisitRepository,
         IRepository<Patient> patientRepository,
         IRepository<User> userRepository,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        INotificationService notificationService)
     {
         _patientVisitRepository = patientVisitRepository;
         _patientRepository = patientRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<PatientVisitDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -164,6 +167,16 @@ public class PatientVisitService : IPatientVisitService
         var createdVisit = await _patientVisitRepository.AddAsync(visit, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Send notification to the assigned doctor
+        await _notificationService.CreateAsync(new CreateNotificationDto
+        {
+            UserId = dto.AssignedDoctorId,
+            Type = NotificationType.VisitCreated,
+            Title = "Lượt khám mới được giao",
+            Message = $"Bạn được giao lượt khám cho bệnh nhân {patient.FullName}. Triệu chứng: {dto.Symptoms ?? "Không có"}",
+            RelatedVisitId = createdVisit.Id
+        }, cancellationToken);
+
         var visitDto = _mapper.Map<PatientVisitDto>(createdVisit);
         visitDto.PatientName = patient.FullName;
         visitDto.AssignedDoctorName = GetDoctorFullName(doctor);
@@ -242,7 +255,7 @@ public class PatientVisitService : IPatientVisitService
     private static string GetDoctorFullName(User? user)
     {
         if (user == null) return "Unknown";
-        
+
         var fullName = $"{user.FirstName} {user.LastName}".Trim();
         return string.IsNullOrWhiteSpace(fullName) ? user.Username : fullName;
     }

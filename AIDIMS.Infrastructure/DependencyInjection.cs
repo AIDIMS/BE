@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IAiAnalysisRepository, AiAnalysisRepository>();
         services.AddScoped<IImageAnnotationRepository, ImageAnnotationRepository>();
         services.AddScoped<IDiagnosisRepository, DiagnosisRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();

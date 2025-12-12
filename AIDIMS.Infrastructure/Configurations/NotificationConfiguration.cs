@@ -29,6 +29,10 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.IsSent)
             .IsRequired();
 
+        builder.Property(n => n.Type)
+            .IsRequired()
+            .HasConversion<int>();
+
         // Relationships
         builder.HasOne(n => n.User)
             .WithMany(u => u.Notifications)
@@ -40,9 +44,16 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .HasForeignKey(n => n.RelatedStudyId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(n => n.RelatedVisit)
+            .WithMany(pv => pv.Notifications)
+            .HasForeignKey(n => n.RelatedVisitId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes
         builder.HasIndex(n => n.UserId);
         builder.HasIndex(n => n.RelatedStudyId);
+        builder.HasIndex(n => n.RelatedVisitId);
+        builder.HasIndex(n => n.Type);
         builder.HasIndex(n => n.IsRead);
         builder.HasIndex(n => n.IsSent);
         builder.HasIndex(n => n.CreatedAt);

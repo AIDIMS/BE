@@ -14,19 +14,22 @@ public class ImagingOrderService : IImagingOrderService
     private readonly IRepository<Patient> _patientRepository;
     private readonly IRepository<User> _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notificationService;
 
     public ImagingOrderService(
         IImagingOrderRepository orderRepository,
         IRepository<PatientVisit> visitRepository,
         IRepository<Patient> patientRepository,
         IRepository<User> userRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        INotificationService notificationService)
     {
         _orderRepository = orderRepository;
         _visitRepository = visitRepository;
         _patientRepository = patientRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<ImagingOrderDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -190,6 +193,26 @@ public class ImagingOrderService : IImagingOrderService
             visit.Status = PatientVisitStatus.Inprogress;
             await _visitRepository.UpdateAsync(visit, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        // Get patient information
+        var patient = await _patientRepository.GetByIdAsync(visit.PatientId, cancellationToken);
+
+        // Get all technicians to notify them
+        var allUsers = await _userRepository.GetAllAsync(cancellationToken);
+        var technicians = allUsers.Where(u => u.Role == UserRole.Technician).ToList();
+
+        // Send notifications to all technicians
+        foreach (var technician in technicians)
+        {
+            await _notificationService.CreateAsync(new CreateNotificationDto
+            {
+                UserId = technician.Id,
+                Type = NotificationType.ImagingOrderAssigned,
+                Title = "Yêu cầu chụp chiếu mới",
+                Message = $"Yêu cầu {modality} - {bodyPart} cho bệnh nhân {patient?.FullName ?? "Unknown"}. Lý do: {dto.ReasonForStudy}",
+                RelatedVisitId = visit.Id
+            }, cancellationToken);
         }
 
         var orderDto = await MapToDto(createdOrder, cancellationToken);
