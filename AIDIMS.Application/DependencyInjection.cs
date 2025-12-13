@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IImageAnnotationService, ImageAnnotationService>();
         services.AddScoped<IDiagnosisService, DiagnosisService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         // Add other services here
 
