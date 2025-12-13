@@ -12,17 +12,20 @@ public class DashboardService : IDashboardService
     private readonly IRepository<Patient> _patientRepository;
     private readonly IRepository<PatientVisit> _visitRepository;
     private readonly IRepository<ImagingOrder> _orderRepository;
+    private readonly IRepository<User> _userRepository;
     private readonly IDateTimeProvider _dateTimeProvider;
 
     public DashboardService(
         IRepository<Patient> patientRepository,
         IRepository<PatientVisit> visitRepository,
         IRepository<ImagingOrder> orderRepository,
+        IRepository<User> userRepository,
         IDateTimeProvider dateTimeProvider)
     {
         _patientRepository = patientRepository;
         _visitRepository = visitRepository;
         _orderRepository = orderRepository;
+        _userRepository = userRepository;
         _dateTimeProvider = dateTimeProvider;
     }
 
@@ -146,46 +149,30 @@ public class DashboardService : IDashboardService
     {
         try
         {
-            // Get current Vietnam time and convert to Unspecified for comparison with database dates
-            var today = DateTime.SpecifyKind(_dateTimeProvider.Today, DateTimeKind.Unspecified);
+            // Get all users (staff) from database
+            var allUsers = await _userRepository.GetAllAsync(cancellationToken);
+            
+            // Filter out deleted users and get active staff
+            var activeStaff = allUsers.Where(u => !u.IsDeleted).ToList();
+            var totalStaff = activeStaff.Count;
 
-            // Default to current week if not specified
-            var weekStart = startDate.HasValue 
-                ? DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Unspecified)
-                : GetStartOfWeek(today);
-            var weekEnd = endDate.HasValue 
-                ? DateTime.SpecifyKind(endDate.Value.Date, DateTimeKind.Unspecified)
-                : today;
-
-            // Get all visits in the date range
-            var allVisits = await _visitRepository.GetAllAsync(cancellationToken);
-            var visitsInRange = allVisits
-                .Where(v => v.CreatedAt.Date >= weekStart && v.CreatedAt.Date <= weekEnd)
-                .ToList();
-
-            var totalVisits = visitsInRange.Count;
-
-            // Group by department (we need to load the assigned doctor to get department)
-            var departmentGroups = visitsInRange
-                .GroupBy(v => v.AssignedDoctor?.Department ?? Department.Administration)
+            // Group by department
+            var departmentGroups = activeStaff
+                .GroupBy(u => u.Department)
                 .Select(g => new DepartmentStatDto
                 {
                     DepartmentName = GetDepartmentDisplayName(g.Key),
-                    VisitCount = g.Count(),
-                    Percentage = totalVisits > 0 ? Math.Round((double)g.Count() / totalVisits * 100, 1) : 0
+                    StaffCount = g.Count(),
+                    Percentage = totalStaff > 0 ? Math.Round((double)g.Count() / totalStaff * 100, 1) : 0
                 })
-                .OrderByDescending(d => d.VisitCount)
+                .OrderByDescending(d => d.StaffCount)
                 .ToList();
-
-            // Calculate average visits per day
-            var dayCount = (weekEnd - weekStart).Days + 1;
-            var averageVisitsPerDay = dayCount > 0 ? Math.Round((double)totalVisits / dayCount, 1) : 0;
 
             var statistics = new DepartmentStatisticsDto
             {
                 Departments = departmentGroups,
-                TotalVisitsThisWeek = totalVisits,
-                AverageVisitsPerDay = averageVisitsPerDay
+                TotalStaff = totalStaff,
+                TotalActiveStaff = totalStaff
             };
 
             return Result<DepartmentStatisticsDto>.Success(statistics);

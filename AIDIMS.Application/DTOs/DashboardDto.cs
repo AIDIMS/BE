@@ -16,20 +16,20 @@ public class DashboardStatisticsDto
 }
 
 /// <summary>
-/// Department distribution statistics
+/// Department staff distribution statistics
 /// </summary>
 public class DepartmentStatDto
 {
     public string DepartmentName { get; set; } = string.Empty;
-    public int VisitCount { get; set; }
+    public int StaffCount { get; set; }
     public double Percentage { get; set; }
 }
 
 public class DepartmentStatisticsDto
 {
     public List<DepartmentStatDto> Departments { get; set; } = new();
-    public int TotalVisitsThisWeek { get; set; }
-    public double AverageVisitsPerDay { get; set; }
+    public int TotalStaff { get; set; }
+    public int TotalActiveStaff { get; set; }
 }
 
 /// <summary>

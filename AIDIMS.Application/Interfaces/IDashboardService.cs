@@ -11,7 +11,7 @@ public interface IDashboardService
     Task<Result<DashboardStatisticsDto>> GetStatisticsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get department statistics for a date range
+    /// Get department staff distribution statistics
     /// </summary>
     Task<Result<DepartmentStatisticsDto>> GetDepartmentStatisticsAsync(
         DateTime? startDate = null,
